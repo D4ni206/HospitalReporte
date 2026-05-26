@@ -1,0 +1,186 @@
+/* Reset global */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body, #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Pantalla completa fija, sin scroll */
+.split-login-screen {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+/* --- COLUMNA IZQUIERDA --- */
+.split-login-left {
+    width: 50%;
+    height: 100%;
+    background-color: #0f2439;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 56px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.hospital-logo-container {
+    background-color: #ffffff;
+    padding: 0px 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px;
+    align-self: flex-start;
+    max-width: 190px;
+}
+
+.hospital-logo-web {
+    width: 230px;
+    height: auto;
+    display: block;
+}
+
+.left-text-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app-badge {
+    color: #0a8d7b;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.left-text-footer h1 {
+    color: #ffffff;
+    font-size: 50px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0;
+}
+
+/* --- COLUMNA DERECHA --- */
+.split-login-right {
+    width: 50%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.right-content {
+    width: 100%;
+    max-width: 850px;
+    padding: 0 200px;
+    box-sizing: border-box;
+}
+
+.login-form-header {
+    margin-bottom: 30px;
+}
+
+.login-form-header h2 {
+    color: #0f2439;
+    font-size: 50px;
+    font-weight: 640;
+    margin-bottom: 8px;
+}
+
+.form-subtitle {
+    color: #718096;
+    font-size: 19px;
+}
+
+.hospital-form-split {
+    display: block;
+}
+
+.form-input-wrapper {
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper label {
+    display: block;
+    color: #1a202c;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.form-input-wrapper input {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid #e2e8f0;
+    background-color: #f7fafc;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #2d3748;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input-wrapper input::placeholder {
+    color: #a0aec0;
+}
+
+.form-input-wrapper input:focus {
+    border-color: #0a8d7b;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(10, 141, 123, 0.1);
+}
+
+.btn-submit-split {
+    width: 100%;
+    background-color: #0a8d7b;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 25px;
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-submit-split:hover {
+    background-color: #087566;
+}
+
+.footer-text-split {
+    text-align: center;
+    color: #718096;
+    font-size: 17px;
+    margin-top: 32px;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+    .split-login-left {
+        display: none;
+    }
+    .split-login-right {
+        width: 100%;
+        height: 100vh;
+    }
+}
