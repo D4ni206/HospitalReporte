@@ -1,158 +1,61 @@
-import { useState } from "react";
-import { supabase }
-from "../../supabase/client";
-
-export default function ConsultaPaciente(){
-
-const [dni,setDni]=
-useState("");
-
-const [paciente,setPaciente]=
-useState(null);
-
-
-const buscar=
-async()=>{
-
-const {data,error}
-
-=
-
-await supabase
-
-.from("pacientes")
-
-.select("*")
-
-.eq(
-"dni",
-dni
-)
-
-.single();
-
-
-if(error){
-
-alert(
-"Paciente no registrado"
-);
-
-return;
-
-}
-
-
-setPaciente(
-data
-);
-
-};
-
-
-return(
-
-<div className="card">
-
-<h1>
-
-Consulta Paciente
-
-</h1>
-
-
-<input
-
-placeholder=
-"Ingrese DNI"
-
-value=
-{dni}
-
-onChange={
-(e)=>
-
-setDni(
-e.target.value
-)
-
-}
-
-/>
-
-
-
-<button
-onClick={buscar}
->
-
-Consultar
-
-</button>
-
-
-
-{
-
-paciente && (
-
-<div
-style={{
-marginTop:"30px"
-}}
->
-
-<h2>
-
-{paciente.nombre}
-
-</h2>
-
-
-<p>
-
-Estado:
-
-{paciente.estado}
-
-</p>
-
-
-<p>
-
-Condición:
-
-{paciente.condicion}
-
-</p>
-
-
-<p>
-
-Características:
-
-{paciente.caracteristicas}
-
-</p>
-
-
-<p>
-
-Ubicación:
-
-{paciente.carpa}
-
-</p>
-
-</div>
-
-)
-
-}
-
-
-</div>
-
-)
-
+import { useEffect, useState } from "react";
+import "./consultaPaciente.css";
+
+export default function ConsultaPaciente() {
+	const [pacientes, setPacientes] = useState([]);
+	const [busqueda, setBusqueda] = useState("");
+
+	useEffect(() => {
+		fetch("https://randomuser.me/api/?results=50")
+			.then((r) => r.json())
+			.then((data) => {
+				setPacientes(data.results);
+			});
+	}, []);
+
+	const filtrados = pacientes.filter((p) =>
+		(p.name.first + " " + p.name.last).toLowerCase().includes(busqueda.toLowerCase())
+	);
+
+	return (
+		<div className="consulta">
+			<h1>🔍 Consulta pacientes</h1>
+
+			<input
+				className="buscador"
+				placeholder="Buscar paciente..."
+				value={busqueda}
+				onChange={(e) => setBusqueda(e.target.value)}
+			/>
+
+			<div className="tabla">
+				<table>
+					<thead>
+						<tr>
+							<th>Foto</th>
+							<th>Nombre</th>
+							<th>Correo</th>
+							<th>Edad</th>
+							<th>Ciudad</th>
+						</tr>
+					</thead>
+					<tbody>
+						{filtrados.map((p, i) => (
+							<tr key={i}>
+								<td>
+									<img src={p.picture.thumbnail} />
+								</td>
+								<td>
+									{p.name.first} {p.name.last}
+								</td>
+								<td>{p.email}</td>
+								<td>{p.dob.age}</td>
+								<td>{p.location.city}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
 }

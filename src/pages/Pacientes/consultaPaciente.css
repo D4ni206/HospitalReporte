@@ -1,0 +1,45 @@
+.consulta {
+  padding: 40px;
+  background: #edf0f5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.buscador {
+  width: 100%;
+  max-width: 500px;
+  padding: 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  margin: 20px 0;
+}
+
+.tabla {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  height: 75vh;
+  overflow: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #163b63;
+  color: white;
+  padding: 15px;
+}
+
+td {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+img {
+  border-radius: 50%;
+}
