@@ -94,6 +94,24 @@ html, body, #root {
     box-sizing: border-box;
 }
 
+/* Tarjeta blanca centrada dentro de la columna derecha */
+.form-card {
+    width: 100%;
+    max-width: 420px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 36px;
+    box-shadow: 0 10px 30px rgba(15, 36, 57, 0.12);
+    margin: 0 auto;
+}
+
+.logo-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
 .login-form-header {
     margin-bottom: 30px;
 }

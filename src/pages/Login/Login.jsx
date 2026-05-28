@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./Login.css";
@@ -8,6 +8,7 @@ export default function Login() {
 	const [password, setPassword] = useState("");
 	const { login } = useAuth();
 	const navigate = useNavigate();
+	const userRef = useRef(null);
 
 	async function ingresar() {
 		const ok = await login(usuario, password);
@@ -15,11 +16,75 @@ export default function Login() {
 		else alert("Usuario incorrecto");
 	}
 
+	useEffect(() => {
+		// intenta limpiar cualquier autofill al montar
+		try {
+			if (userRef && userRef.current) userRef.current.value = "";
+			setUsuario("");
+		} catch (e) {
+			/* no hacer nada */
+		}
+	}, []);
+
 	return (
-		<div>
-			<input placeholder="usuario" onChange={(e) => setUsuario(e.target.value)} />
-			<input type="password" placeholder="password" onChange={(e) => setPassword(e.target.value)} />
-			<button onClick={ingresar}>Ingresar</button>
+		<div className="split-login-screen">
+			<div className="split-login-left">
+				<div className="hospital-logo-container">
+					<img src="/logo.png" alt="logo" className="hospital-logo-web" />
+				</div>
+
+				<div className="left-text-footer">
+					<span className="app-badge">Book Demo</span>
+					<h1>Join us to keep the financial industry safe</h1>
+				</div>
+
+				<div style={{ height: 24 }} />
+			</div>
+
+			<div className="split-login-right">
+				<div className="right-content">
+					<div className="form-card">
+						<div className="logo-center">
+							<img src="/logo.png" alt="logo" className="hospital-logo-web" />
+						</div>
+
+						<div className="hospital-form-split">
+							<div className="form-input-wrapper">
+								<label>Usuario</label>
+								<input
+									placeholder="usuario@ejemplo.com"
+									defaultValue={usuario}
+									onChange={(e) => setUsuario(e.target.value)}
+									autoComplete="off"
+									ref={userRef}
+								/>
+							</div>
+
+							<div className="form-input-wrapper">
+								<label>Contraseña</label>
+								<input
+									type="password"
+									placeholder="Password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+								/>
+							</div>
+
+							<div style={{ marginBottom: 12 }}>
+								<label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+									<input type="checkbox" /> <span style={{ fontSize: 14 }}>Acepto la política de privacidad</span>
+								</label>
+							</div>
+
+							<button className="btn-submit-split" onClick={ingresar}>
+								Ingresar
+							</button>
+
+							<div className="footer-text-split">Step 1/3</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 }
