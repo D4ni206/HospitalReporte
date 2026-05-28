@@ -35,7 +35,7 @@ export default function Login() {
 
 				<div className="left-text-footer">
 					<span className="app-badge">HOSPITAL SAN JUAN DE DIOS</span>
-					<h1>SISTEMA DE INFORMAS </h1>
+					<h1>SISTEMA DE INFORMES EMERGENCIA,SISMO </h1>
 				</div>
 
 				<div style={{ height: 24 }} />

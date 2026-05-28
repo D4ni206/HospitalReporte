@@ -1,22 +1,29 @@
+import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
 
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
+import { syncPendingPacientes } from "./offlineSync";
 
 export default function App() {
+  useEffect(() => {
+    syncPendingPacientes();
 
-	return (
+    const handleOnline = () => {
+      syncPendingPacientes();
+    };
 
-		<AuthProvider>
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
 
-			<BrowserRouter>
-
-				<AppRoutes />
-
-			</BrowserRouter>
-
-		</AuthProvider>
-
-	);
-
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }

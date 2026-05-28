@@ -48,3 +48,13 @@ cursor:pointer;
 width:300px;
 
 }
+
+.offline-banner {
+  max-width: 500px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #ffe8cc;
+  color: #7c4f01;
+  border: 1px solid #ffcc80;
+  font-size: 15px;
+}
