@@ -30,12 +30,12 @@ export default function Login() {
 		<div className="split-login-screen">
 			<div className="split-login-left">
 				<div className="hospital-logo-container">
-					<img src="/logo.png" alt="logo" className="hospital-logo-web" />
+					<img src="../assets/logo.png" alt="logo" className="hospital-logo-web" />
 				</div>
 
 				<div className="left-text-footer">
-					<span className="app-badge">Book Demo</span>
-					<h1>Join us to keep the financial industry safe</h1>
+					<span className="app-badge">HOSPITAL SAN JUAN DE DIOS</span>
+					<h1>SISTEMA DE INFORMAS </h1>
 				</div>
 
 				<div style={{ height: 24 }} />
