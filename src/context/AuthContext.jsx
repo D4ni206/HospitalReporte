@@ -4,8 +4,18 @@ import { supabase } from "../supabase/client";
 
 const AuthContext = createContext();
 
+function loadStoredUser() {
+	const stored = localStorage.getItem("user");
+	if (!stored) return null;
+	try {
+		return JSON.parse(stored);
+	} catch {
+		return null;
+	}
+}
+
 export function AuthProvider({ children }) {
-	const [usuario, setUsuario] = useState(null);
+	const [usuario, setUsuario] = useState(loadStoredUser());
 
 	async function login(user, pass) {
 		const { data, error } = await supabase

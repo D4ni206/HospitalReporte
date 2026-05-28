@@ -1,158 +1,156 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/client";
 import { useAuth } from "../../context/AuthContext";
 import { savePendingPaciente, syncPendingPacientes, getPendingPacientes } from "../../offlineSync";
 import "./registrar.css";
 
+const createNuevoPaciente = () => ({
+dni: "",
+nombre: "",
+apellido: "",
+triaje: "",
+descripcion: "",
+caracteristicas: "",
+});
+
 export default function RegistrarPaciente() {
-	const { usuario } = useAuth();
-	const [offlineMode, setOfflineMode] = useState(!navigator.onLine);
-	const [pendingCount, setPendingCount] = useState(getPendingPacientes().length);
+const { usuario } = useAuth();
+const navigate = useNavigate();
+const [offlineMode, setOfflineMode] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+const [pendingCount, setPendingCount] = useState(() => getPendingPacientes().length);
+const [nuevo, setNuevo] = useState(createNuevoPaciente());
 
-	const [nuevo, setNuevo] = useState({
-		dni: "",
-		nombre: "",
-		edad: "",
-		sexo: "",
-		estado: "",
-		carpa: usuario.rol.toLowerCase() === "admin" ? "" : usuario.carpa,
-	});
+useEffect(() => {
+if (!usuario) {
+navigate("/");
+}
+}, [usuario, navigate]);
 
-	useEffect(() => {
-		const handleOnline = async () => {
-			setOfflineMode(false);
-			setPendingCount(getPendingPacientes().length);
-			const result = await syncPendingPacientes();
-			if (result.synced && result.count > 0) {
-				alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-				setPendingCount(0);
-			} else if (!result.synced && result.reason !== "offline") {
-				console.warn("Sync error:", result.reason);
-			}
-		};
+useEffect(() => {
+const handleOnline = async () => {
+setOfflineMode(false);
+setPendingCount(getPendingPacientes().length);
+const result = await syncPendingPacientes();
+if (result.synced && result.count > 0) {
+alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+setPendingCount(0);
+} else if (!result.synced && result.reason !== "offline") {
+console.warn("Sync error:", result.reason);
+}
+};
 
-		const handleOffline = () => {
-			setOfflineMode(true);
-		};
+const handleOffline = () => {
+setOfflineMode(true);
+};
 
-		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", handleOffline);
+window.addEventListener("online", handleOnline);
+window.addEventListener("offline", handleOffline);
 
-		return () => {
-			window.removeEventListener("online", handleOnline);
-			window.removeEventListener("offline", handleOffline);
-		};
-	}, []);
+return () => {
+window.removeEventListener("online", handleOnline);
+window.removeEventListener("offline", handleOffline);
+};
+}, []);
 
-	async function guardar() {
-		const paciente = {
-			...nuevo,
-			registrado_por: usuario.usuario,
-		};
+const resetForm = () => {
+setNuevo(createNuevoPaciente());
+};
 
-		const saveLocal = () => {
-			savePendingPaciente(paciente);
-			setPendingCount(getPendingPacientes().length);
-			alert("Sin conexión: el paciente se guardó localmente y se sincronizará cuando haya internet.");
-			setNuevo({ dni: "", nombre: "", edad: "", sexo: "", estado: "", carpa: usuario.carpa });
-		};
+const buildPaciente = () => ({
+...nuevo,
+usuarioId: usuario?.id || usuario?.usuario || "",
+nombreperador: usuario?.usuario || "",
+fechaRegistro: new Date().toISOString().slice(0, 10),
+});
 
-		if (!navigator.onLine) {
-			saveLocal();
-			return;
-		}
+const saveLocal = (paciente) => {
+savePendingPaciente(paciente);
+setPendingCount(getPendingPacientes().length);
+alert("Sin conexión: el paciente se guardó localmente y se sincronizará cuando haya internet.");
+resetForm();
+};
 
-		try {
-			const { error } = await supabase.from("pacientes").insert([paciente]);
-			if (error) {
-				console.warn("Error guardando paciente en Supabase", error);
-				saveLocal();
-				return;
-			}
+async function guardar() {
+const paciente = buildPaciente();
 
-			alert("Paciente registrado correctamente.");
-			setNuevo({ dni: "", nombre: "", edad: "", sexo: "", estado: "", carpa: usuario.carpa });
-			setPendingCount(getPendingPacientes().length);
-			if (getPendingPacientes().length > 0) {
-				const result = await syncPendingPacientes();
-				if (result.synced && result.count > 0) {
-					alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-					setPendingCount(0);
-				}
-			}
-		} catch (error) {
-			console.warn("Error de red o servidor al guardar paciente", error);
-			saveLocal();
-		}
-	}
+if (!navigator.onLine) {
+saveLocal(paciente);
+return;
+}
 
-	return (
-		<div className="registrar">
-			<h1>➕ Registrar paciente</h1>
-			{offlineMode && (
-				<div className="offline-banner">
-					Sin conexión. Los nuevos registros se guardan localmente.
-					{pendingCount > 0 && ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})`}
-				</div>
-			)}
-			{pendingCount > 0 && !offlineMode && (
-				<div className="offline-banner" style={{ background: "#d1f7dc", color: "#166534", borderColor: "#a7f3d0" }}>
-					Hay {pendingCount} registro(s) pendientes por sincronizar.
-					<button type="button" onClick={async () => {
-						const result = await syncPendingPacientes();
-						if (result.synced) {
-							alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-							setPendingCount(0);
-						} else {
-							alert(`No se pudo sincronizar: ${result.reason || 'error'}`);
-						}
-					}} style={{ marginLeft: 16, padding: "10px 14px", borderRadius: 10, background: "#0b6a4f", color: "white", border: "none", cursor: "pointer" }}>
-						Sincronizar ahora
-					</button>
-				</div>
-			)}
+try {
+const { error } = await supabase.from("pacientes").insert([paciente]);
+if (error) {
+console.warn("Error guardando paciente en Supabase", error);
+saveLocal(paciente);
+return;
+}
 
-			<input
-				placeholder="DNI"
-				value={nuevo.dni}
-				onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })}
-			/>
+alert("Paciente registrado correctamente.");
+resetForm();
+setPendingCount(getPendingPacientes().length);
+if (getPendingPacientes().length > 0) {
+const result = await syncPendingPacientes();
+if (result.synced && result.count > 0) {
+alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+setPendingCount(0);
+}
+}
+} catch (error) {
+console.warn("Error de red o servidor al guardar paciente", error);
+saveLocal(paciente);
+}
+}
 
-			<input
-				placeholder="Nombre"
-				value={nuevo.nombre}
-				onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
-			/>
+if (!usuario) {
+return (
+<div className="registrar">
+<h1>➕ Registrar paciente</h1>
+<p>Cargando usuario...</p>
+</div>
+);
+}
 
-			<input
-				placeholder="Edad"
-				value={nuevo.edad}
-				onChange={(e) => setNuevo({ ...nuevo, edad: e.target.value })}
-			/>
+return (
+<div className="registrar">
+<h1>➕ Registrar paciente</h1>
+{offlineMode && (
+<div className="offline-banner">
+Sin conexión. Los nuevos registros se guardan localmente.
+{pendingCount > 0 && ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})`}
+</div>
+)}
+{pendingCount > 0 && !offlineMode && (
+<div className="offline-banner" style={{ background: "#d1f7dc", color: "#166534", borderColor: "#a7f3d0" }}>
+Hay {pendingCount} registro(s) pendientes por sincronizar.
+<button
+type="button"
+onClick={async () => {
+const result = await syncPendingPacientes();
+if (result.synced) {
+alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+setPendingCount(0);
+} else {
+alert(`No se pudo sincronizar: ${result.reason || 'error'}`);
+}
+}}
+style={{ marginLeft: 16, padding: "10px 14px", borderRadius: 10, background: "#0b6a4f", color: "white", border: "none", cursor: "pointer" }}
+>
+Sincronizar ahora
+</button>
+</div>
+)}
 
-			<select value={nuevo.sexo} onChange={(e) => setNuevo({ ...nuevo, sexo: e.target.value })}>
-				<option value="">Sexo</option>
-				<option value="Masculino">Masculino</option>
-				<option value="Femenino">Femenino</option>
-			</select>
+<input placeholder="DNI" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
+<input placeholder="Nombre" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
+<input placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
+<input placeholder="Triaje" value={nuevo.triaje} onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })} />
 
-			<select value={nuevo.estado} onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value })}>
-				<option value="">Estado</option>
-				<option value="Leve">Leve</option>
-				<option value="Moderado">Moderado</option>
-				<option value="Crítico">Crítico</option>
-			</select>
+<textarea placeholder="Descripción" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
+<textarea placeholder="Características" value={nuevo.caracteristicas} onChange={(e) => setNuevo({ ...nuevo, caracteristicas: e.target.value })} />
 
-			{usuario.rol.toLowerCase() === "admin" && (
-				<select value={nuevo.carpa} onChange={(e) => setNuevo({ ...nuevo, carpa: e.target.value })}>
-					<option value="">CarpaA</option>
-					<option value="CarpaB">CarpaB</option>
-					<option value="CarpaC">CarpaC</option>
-					<option value="CarpaD">CarpaD</option>
-				</select>
-			)}
-
-			<button onClick={guardar}>Guardar paciente</button>
-		</div>
-	);
+<button onClick={guardar}>Guardar paciente</button>
+</div>
+);
 }

@@ -1,51 +1,55 @@
-import * as XLSX from "xlsx";
+﻿import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { supabase } from "../../supabase/client";
 
-export default function ReporteExcel(){
-
-const generarExcel=async()=>{
-
-const {data,error}=await supabase
-.from("pacientes")
-.select("*");
-
-if(error) return console.log(error);
-
-const hoja=
-XLSX.utils.json_to_sheet(data);
-
-const libro=
-XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(
-libro,
-hoja,
-"Pacientes"
-);
-
-const excel=
-XLSX.write(
-libro,
-{
-bookType:"xlsx",
-type:"array"
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
 }
-);
 
-saveAs(
-new Blob([excel]),
-"pacientes.xlsx"
-);
+function buildRows(data = []) {
+  return data.map((p) => ({
+    ID: p.id,
+    Nombre: p.nombre,
+    Apellido: p.apellido,
+    DNI: p.dni,
+    Triaje: p.triaje,
+    Descripción: p.descripcion,
+    UsuarioID: p.usuarioId,
+    NombreOperador: p.nombreperador,
+    FechaRegistro: formatDate(p.fechaRegistro),
+    Características: p.caracteristicas,
+  }));
+}
 
-};
+async function loadPacientes() {
+  const { data, error } = await supabase.from("pacientes").select("*");
+  if (error) {
+    throw error;
+  }
+  return data || [];
+}
 
-return(
+export default function ReporteExcel({ pacientes }) {
+  const generarExcel = async () => {
+    let data = pacientes;
+    if (!data || data.length === 0) {
+      data = await loadPacientes();
+    }
 
-<button onClick={generarExcel}>
-Descargar Excel
-</button>
+    const rows = buildRows(data);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
 
-)
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), "pacientes.xlsx");
+  };
 
+  return (
+    <button type="button" onClick={generarExcel}>
+      Exportar Excel
+    </button>
+  );
 }

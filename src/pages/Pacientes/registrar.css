@@ -13,7 +13,8 @@ gap:20px;
 
 
 .registrar input,
-.registrar select{
+.registrar select,
+.registrar textarea{
 
 padding:18px;
 
@@ -24,6 +25,10 @@ border:none;
 font-size:18px;
 
 max-width:400px;
+
+resize: vertical;
+
+min-height: 130px;
 
 }
 

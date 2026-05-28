@@ -1,41 +1,38 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../../supabase/client";
-import { useAuth } from "../../context/AuthContext";
+import { usePacientes } from "../../hooks/usePacientes";
+import PacienteTable from "../../components/PacienteTable";
+import ReportePDF from "../Reportes/ReportePDF";
+import ReporteExcel from "../Reportes/ReporteExcel";
+import "./listaPacientes.css";
 
 export default function ListaPacientes() {
-  const [pacientes, setPacientes] = useState([]);
-  const { usuario } = useAuth();
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      let query = supabase.from("pacientes").select("*");
-      if (usuario && usuario.rol && usuario.rol.toLowerCase() !== "admin") {
-        query = query.eq("carpa", usuario.carpa);
-      }
-      const { data } = await query;
-      if (mounted) setPacientes(data || []);
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [usuario]);
+  const { pacientes, loading, error, busqueda, setBusqueda } = usePacientes();
 
   return (
-    <div>
-      <h1>Pacientes</h1>
-      <table>
-        <tbody>
-          {pacientes.map((p) => (
-            <tr key={p.id || p.nombre}>
-              <td>{p.nombre}</td>
-              <td>{p.carpa}</td>
-              <td>{p.estado}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="lista-pacientes">
+      <div className="lista-header">
+        <h1>Lista Pacientes</h1>
+
+        <div className="lista-actions">
+          <input
+            className="buscador"
+            placeholder="Buscar por nombre, apellido o DNI"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          <div className="export-buttons">
+            <ReportePDF pacientes={pacientes} />
+            <ReporteExcel pacientes={pacientes} />
+          </div>
+        </div>
+      </div>
+
+      {error && <div className="error-box">{error}</div>}
+
+      {loading ? (
+        <div className="error-box">Cargando pacientes...</div>
+      ) : (
+        <PacienteTable pacientes={pacientes} />
+      )}
     </div>
   );
 }
