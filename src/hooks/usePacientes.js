@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { fetchPacientes } from "../services/pacientesService";
+import { useAuth } from "../context/AuthContext";
 
 export function usePacientes(initialSearch = "") {
+  const { usuario } = useAuth();
   const [busqueda, setBusqueda] = useState(initialSearch);
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ export function usePacientes(initialSearch = "") {
       setError(null);
 
       try {
-        const data = await fetchPacientes({ search: busqueda });
+        const data = await fetchPacientes({ search: busqueda, usuario });
         if (!active) return;
         setPacientes(data);
       } catch (err) {
@@ -30,7 +32,7 @@ export function usePacientes(initialSearch = "") {
       active = false;
       clearTimeout(timer);
     };
-  }, [busqueda]);
+  }, [busqueda, usuario]);
 
   return { pacientes, loading, error, busqueda, setBusqueda };
 }

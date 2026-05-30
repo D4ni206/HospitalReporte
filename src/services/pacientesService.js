@@ -1,7 +1,12 @@
 import { supabase } from "../supabase/client";
 
-export async function fetchPacientes({ search = "" } = {}) {
+export async function fetchPacientes({ search = "", usuario = null } = {}) {
   let query = supabase.from("pacientes").select("*").order("id", { ascending: false }).limit(500);
+
+  // Filter by operator if user is not admin
+  if (usuario && usuario.rol !== "admin") {
+    query = query.eq("nombreOperador", usuario.usuario);
+  }
 
   if (search.trim()) {
     const term = search.trim().replace(/%/g, "\\%");

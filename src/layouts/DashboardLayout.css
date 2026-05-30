@@ -66,12 +66,13 @@
 
 /* ===== CONTENIDO ===== */
 .contenido {
-  margin-left: 290px; /* Corregido: Ajustado a 290px para igualar el ancho de tu .sidebar */
+  margin-left: 290px;
   flex: 1;
   padding: 40px;
-  min-height: 100vh;
   background: #F5F7FA;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100vh;
 }
 
 /* ===== TARJETAS ===== */

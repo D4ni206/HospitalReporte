@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/client";
 import { useAuth } from "../../context/AuthContext";
-import { savePendingPaciente, syncPendingPacientes, getPendingPacientes } from "../../offlineSync";
+import { savePendingPaciente, syncPendingPacientes, getPendingPacientes, isOnline } from "../../offlineSync";
 import "./registrar.css";
 
 const createNuevoPaciente = () => ({
@@ -12,182 +12,241 @@ const createNuevoPaciente = () => ({
 	fechaNacimiento: "",
 	sexo: "",
 	direccion: "",
-	telefono: "",
-	email: "",
 	seguro: "",
-	contactoNombre: "",
-	contactoTelefono: "",
 	triaje: "",
-	peso: "",
-	talla: "",
 	descripcion: "",
 	caracteristicas: "",
 	alergias: "",
-	antecedentes: "",
 });
-
 
 export default function RegistrarPaciente() {
-const { usuario } = useAuth();
-const navigate = useNavigate();
-const [offlineMode, setOfflineMode] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
-const [pendingCount, setPendingCount] = useState(() => getPendingPacientes().length);
-const [nuevo, setNuevo] = useState(createNuevoPaciente());
+	const { usuario } = useAuth();
+	const navigate = useNavigate();
+	const [offlineMode, setOfflineMode] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+	const [pendingCount, setPendingCount] = useState(() => getPendingPacientes().length);
+	const [nuevo, setNuevo] = useState(createNuevoPaciente());
+	const [loading, setLoading] = useState(false);
 
-useEffect(() => {
-if (!usuario) {
-navigate("/");
-}
-}, [usuario, navigate]);
+	useEffect(() => {
+		if (!usuario) {
+			navigate("/");
+		}
+	}, [usuario, navigate]);
 
-useEffect(() => {
-const handleOnline = async () => {
-setOfflineMode(false);
-setPendingCount(getPendingPacientes().length);
-const result = await syncPendingPacientes();
-if (result.synced && result.count > 0) {
-alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-setPendingCount(0);
-} else if (!result.synced && result.reason !== "offline") {
-console.warn("Sync error:", result.reason);
-}
-};
+	useEffect(() => {
+		const checkConnection = async () => {
+			const online = await isOnline();
+			setOfflineMode(!online);
+		};
 
-const handleOffline = () => {
-setOfflineMode(true);
-};
+		const handleOnline = async () => {
+			const online = await isOnline();
+			setOfflineMode(!online);
+			setPendingCount(getPendingPacientes().length);
+			const result = await syncPendingPacientes();
+			if (result.synced && result.count > 0) {
+				alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+				setPendingCount(0);
+			}
+		};
 
-window.addEventListener("online", handleOnline);
-window.addEventListener("offline", handleOffline);
+		const handleOffline = () => {
+			setOfflineMode(true);
+		};
 
-return () => {
-window.removeEventListener("online", handleOnline);
-window.removeEventListener("offline", handleOffline);
-};
-}, []);
+		checkConnection();
+		window.addEventListener("online", handleOnline);
+		window.addEventListener("offline", handleOffline);
 
-const resetForm = () => {
-setNuevo(createNuevoPaciente());
-};
+		return () => {
+			window.removeEventListener("online", handleOnline);
+			window.removeEventListener("offline", handleOffline);
+		};
+	}, []);
 
-const buildPaciente = () => ({
-	...nuevo,
-	usuarioId: usuario?.id || usuario?.usuario || "",
-	nombreOperador: usuario?.usuario || "",
-	fechaRegistro: new Date().toISOString().slice(0, 10),
-});
+	const resetForm = () => {
+		setNuevo(createNuevoPaciente());
+	};
 
-const saveLocal = (paciente) => {
-savePendingPaciente(paciente);
-setPendingCount(getPendingPacientes().length);
-alert("Sin conexión: el paciente se guardó localmente y se sincronizará cuando haya internet.");
-resetForm();
-};
+	const buildPaciente = () => ({
+		...nuevo,
+		usuarioId: usuario?.id || usuario?.usuario || "",
+		nombreOperador: usuario?.usuario || "",
+		fechaRegistro: new Date().toISOString().slice(0, 10),
+	});
 
-async function guardar() {
-const paciente = buildPaciente();
+	const saveLocal = (paciente) => {
+		savePendingPaciente(paciente);
+		setPendingCount(getPendingPacientes().length);
+		alert("Sin conexión: el paciente se guardó localmente y se sincronizará cuando haya internet.");
+		resetForm();
+	};
 
-if (!navigator.onLine) {
-saveLocal(paciente);
-return;
-}
+	async function guardar() {
+		setLoading(true);
+		const paciente = buildPaciente();
 
-try {
-const { error } = await supabase.from("pacientes").insert([paciente]);
-if (error) {
-console.warn("Error guardando paciente en Supabase", error);
-saveLocal(paciente);
-return;
-}
+		const online = await isOnline();
+		if (!online) {
+			saveLocal(paciente);
+			setLoading(false);
+			return;
+		}
 
-alert("Paciente registrado correctamente.");
-resetForm();
-setPendingCount(getPendingPacientes().length);
-if (getPendingPacientes().length > 0) {
-const result = await syncPendingPacientes();
-if (result.synced && result.count > 0) {
-alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-setPendingCount(0);
-}
-}
-} catch (error) {
-console.warn("Error de red o servidor al guardar paciente", error);
-saveLocal(paciente);
-}
-}
+		try {
+			const { error } = await supabase.from("pacientes").insert([paciente]);
+			if (error) {
+				console.warn("Error guardando paciente en Supabase", error);
+				saveLocal(paciente);
+				setLoading(false);
+				return;
+			}
 
-if (!usuario) {
-return (
-<div className="registrar">
-<h1>➕ Registrar paciente</h1>
-<p>Cargando usuario...</p>
-</div>
-);
-}
+			alert("Paciente registrado correctamente.");
+			resetForm();
+			setPendingCount(getPendingPacientes().length);
+			if (getPendingPacientes().length > 0) {
+				const result = await syncPendingPacientes();
+				if (result.synced && result.count > 0) {
+					alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+					setPendingCount(0);
+				}
+			}
+		} catch (error) {
+			console.warn("Error de red o servidor al guardar paciente", error);
+			saveLocal(paciente);
+		} finally {
+			setLoading(false);
+		}
+	}
 
-return (
-<div className="registrar">
-<h1>➕ Registrar paciente</h1>
-{offlineMode && (
-<div className="offline-banner">
-Sin conexión. Los nuevos registros se guardan localmente.
-{pendingCount > 0 && ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})`}
-</div>
-)}
-{pendingCount > 0 && !offlineMode && (
-<div className="offline-banner" style={{ background: "#d1f7dc", color: "#166534", borderColor: "#a7f3d0" }}>
-Hay {pendingCount} registro(s) pendientes por sincronizar.
-<button
-type="button"
-onClick={async () => {
-const result = await syncPendingPacientes();
-if (result.synced) {
-alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-setPendingCount(0);
-} else {
-alert(`No se pudo sincronizar: ${result.reason || 'error'}`);
-}
-}}
-style={{ marginLeft: 16, padding: "10px 14px", borderRadius: 10, background: "#0b6a4f", color: "white", border: "none", cursor: "pointer" }}
->
-Sincronizar ahora
-</button>
-</div>
-)}
+	if (!usuario) {
+		return (
+			<div className="registrar">
+				<h1>➕ Registrar paciente</h1>
+				<p>Cargando usuario...</p>
+			</div>
+		);
+	}
 
+	return (
+		<div className="registrar">
+			{offlineMode && (
+				<div className="offline-banner">
+					<span>
+						⚠️ Sin conexión. Los registros se guardan localmente.
+						{pendingCount > 0 && ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})`}
+					</span>
+				</div>
+			)}
+			{pendingCount > 0 && !offlineMode && (
+				<div className="offline-banner" style={{ background: "#d1f7dc", color: "#166534", borderColor: "#a7f3d0" }}>
+					<span>📤 {pendingCount} registro(s) pendientes por sincronizar.</span>
+					<button
+						type="button"
+						onClick={async () => {
+							const result = await syncPendingPacientes();
+							if (result.synced) {
+								alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
+								setPendingCount(0);
+							} else {
+								alert(`No se pudo sincronizar: ${result.reason || 'error'}`);
+							}
+						}}
+						style={{ padding: "8px 16px", borderRadius: 6, background: "#0b6a4f", color: "white", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}
+					>
+						Sincronizar
+					</button>
+				</div>
+			)}
 
-<input placeholder="DNI" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
-<input placeholder="Nombre" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
-<input placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
+			<h1>➕ Registrar Paciente</h1>
 
-<input type="date" placeholder="Fecha de nacimiento" value={nuevo.fechaNacimiento} onChange={(e) => setNuevo({ ...nuevo, fechaNacimiento: e.target.value })} />
+			<div className="registrar-container">
+				{/* Datos Personales */}
+				<div className="form-section">
+					<div className="form-section-title">📋 Datos Personales</div>
+					<div className="form-grid">
+						<div className="form-group">
+							<label>DNI</label>
+							<input placeholder="Documento de identidad" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
+						</div>
+						<div className="form-group">
+							<label>Nombre</label>
+							<input placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
+						</div>
+					</div>
+					<div className="form-grid">
+						<div className="form-group">
+							<label>Apellido</label>
+							<input placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
+						</div>
+						<div className="form-group">
+							<label>Fecha de Nacimiento</label>
+							<input type="date" value={nuevo.fechaNacimiento} onChange={(e) => setNuevo({ ...nuevo, fechaNacimiento: e.target.value })} />
+						</div>
+					</div>
+					<div className="form-grid">
+						<div className="form-group">
+							<label>Sexo</label>
+							<select value={nuevo.sexo} onChange={(e) => setNuevo({ ...nuevo, sexo: e.target.value })}>
+								<option value="">Seleccionar...</option>
+								<option value="M">Masculino</option>
+								<option value="F">Femenino</option>
+								<option value="O">Otro</option>
+							</select>
+						</div>
+						<div className="form-group">
+							<label>Dirección</label>
+							<input placeholder="Dirección de residencia" value={nuevo.direccion} onChange={(e) => setNuevo({ ...nuevo, direccion: e.target.value })} />
+						</div>
+					</div>
+				</div>
 
-<select value={nuevo.sexo} onChange={(e) => setNuevo({ ...nuevo, sexo: e.target.value })}>
-	<option value="">Sexo</option>
-	<option value="M">Masculino</option>
-	<option value="F">Femenino</option>
-	<option value="O">Otro</option>
-</select>
+				{/* Información Médica y Seguro */}
+				<div className="form-section">
+					<div className="form-section-title">⚕️ Información Médica</div>
+					<div className="form-grid full">
+						<div className="form-group">
+							<label>Seguro / Obra Social</label>
+							<input placeholder="Tipo de cobertura" value={nuevo.seguro} onChange={(e) => setNuevo({ ...nuevo, seguro: e.target.value })} />
+						</div>
+					</div>
+					<div className="form-grid full">
+						<div className="form-group">
+							<label>Alergias</label>
+							<textarea placeholder="Describe cualquier alergia conocida" value={nuevo.alergias} onChange={(e) => setNuevo({ ...nuevo, alergias: e.target.value })} />
+						</div>
+					</div>
+				</div>
 
-<input placeholder="Teléfono" type="tel" value={nuevo.telefono} onChange={(e) => setNuevo({ ...nuevo, telefono: e.target.value })} />
-<input placeholder="Email" type="email" value={nuevo.email} onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })} />
-<input placeholder="Dirección" value={nuevo.direccion} onChange={(e) => setNuevo({ ...nuevo, direccion: e.target.value })} />
-<input placeholder="Seguro / Obra social" value={nuevo.seguro} onChange={(e) => setNuevo({ ...nuevo, seguro: e.target.value })} />
+				{/* Triaje y Observaciones */}
+				<div className="form-section">
+					<div className="form-section-title">🏥 Triaje y Observaciones</div>
+					<div className="form-grid full">
+						<div className="form-group">
+							<label>Triaje</label>
+							<input placeholder="Nivel de prioridad" value={nuevo.triaje} onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })} />
+						</div>
+					</div>
+					<div className="form-grid full">
+						<div className="form-group">
+							<label>Descripción</label>
+							<textarea placeholder="Descripción general del caso" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
+						</div>
+					</div>
+					<div className="form-grid full">
+						<div className="form-group">
+							<label>Características</label>
+							<textarea placeholder="Características adicionales" value={nuevo.caracteristicas} onChange={(e) => setNuevo({ ...nuevo, caracteristicas: e.target.value })} />
+						</div>
+					</div>
+				</div>
 
-<input placeholder="Peso (kg)" type="number" value={nuevo.peso} onChange={(e) => setNuevo({ ...nuevo, peso: e.target.value })} />
-<input placeholder="Talla (cm)" type="number" value={nuevo.talla} onChange={(e) => setNuevo({ ...nuevo, talla: e.target.value })} />
-
-<input placeholder="Contacto de emergencia - Nombre" value={nuevo.contactoNombre} onChange={(e) => setNuevo({ ...nuevo, contactoNombre: e.target.value })} />
-<input placeholder="Contacto de emergencia - Teléfono" value={nuevo.contactoTelefono} onChange={(e) => setNuevo({ ...nuevo, contactoTelefono: e.target.value })} />
-
-<input placeholder="Triaje" value={nuevo.triaje} onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })} />
-
-<textarea placeholder="Alergias" value={nuevo.alergias} onChange={(e) => setNuevo({ ...nuevo, alergias: e.target.value })} />
-<textarea placeholder="Descripción" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
-<textarea placeholder="Antecedentes personales" value={nuevo.antecedentes} onChange={(e) => setNuevo({ ...nuevo, antecedentes: e.target.value })} />
-<textarea placeholder="Características" value={nuevo.caracteristicas} onChange={(e) => setNuevo({ ...nuevo, caracteristicas: e.target.value })} />
-
-<button onClick={guardar}>Guardar paciente</button>
-</div>
-);
+				<button onClick={guardar} disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
+					{loading ? "⏳ Guardando..." : "💾 Guardar Paciente"}
+				</button>
+			</div>
+		</div>
+	);
 }

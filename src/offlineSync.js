@@ -25,8 +25,28 @@ export function clearPendingPacientes() {
   localStorage.removeItem(PENDING_KEY);
 }
 
+// Detectar conexión a internet de forma más confiable
+export async function isOnline() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch("http://www.google.com/favicon.ico", { 
+      method: "HEAD", 
+      mode: "no-cors",
+      signal: controller.signal 
+    });
+    clearTimeout(timeout);
+    return true;
+  } catch {
+    // Si falla, confía en navigator.onLine
+    return navigator.onLine;
+  }
+}
+
 export async function syncPendingPacientes() {
-  if (!navigator.onLine) {
+  const online = await isOnline();
+  if (!online) {
     return { synced: false, reason: "offline" };
   }
 
@@ -35,21 +55,24 @@ export async function syncPendingPacientes() {
     return { synced: true, count: 0 };
   }
 
-  // Sanitizar campos antes de enviar a Supabase
-  const sanitized = pending.map((p) => {
-    const paciente = { ...p };
-    if (paciente.peso === "" || paciente.peso === undefined) paciente.peso = null;
-    if (paciente.talla === "" || paciente.talla === undefined) paciente.talla = null;
-    if (paciente.fechaNacimiento === "") paciente.fechaNacimiento = null;
-    return paciente;
-  });
+  try {
+    // Sanitizar campos vacíos
+    const sanitized = pending.map((p) => {
+      const paciente = { ...p };
+      if (paciente.fechaNacimiento === "") paciente.fechaNacimiento = null;
+      return paciente;
+    });
 
-  const { data, error } = await supabase.from("pacientes").insert(sanitized);
-  if (error) {
-    console.warn("Sync failed", error);
-    return { synced: false, reason: error.message || "sync error" };
+    const { data, error } = await supabase.from("pacientes").insert(sanitized);
+    if (error) {
+      console.warn("Sync failed", error);
+      return { synced: false, reason: error.message || "sync error" };
+    }
+
+    clearPendingPacientes();
+    return { synced: true, count: pending.length, data };
+  } catch (error) {
+    console.error("Sync error:", error);
+    return { synced: false, reason: error.message || "unknown error" };
   }
-
-  clearPendingPacientes()
-  return { synced: true, count: pending.length, data };
 }
