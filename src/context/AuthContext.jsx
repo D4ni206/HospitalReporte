@@ -2,7 +2,8 @@
 import { createContext, useContext, useState } from "react";
 import { supabase } from "../supabase/client";
 
-const AuthContext = createContext();
+const defaultAuth = { usuario: null, login: async () => false, logout: () => {} };
+const AuthContext = createContext(defaultAuth);
 
 function loadStoredUser() {
 	const stored = localStorage.getItem("user");
@@ -45,5 +46,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-	return useContext(AuthContext);
+	return useContext(AuthContext) || defaultAuth;
 }

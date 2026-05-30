@@ -6,13 +6,26 @@ import { savePendingPaciente, syncPendingPacientes, getPendingPacientes } from "
 import "./registrar.css";
 
 const createNuevoPaciente = () => ({
-dni: "",
-nombre: "",
-apellido: "",
-triaje: "",
-descripcion: "",
-caracteristicas: "",
+	dni: "",
+	nombre: "",
+	apellido: "",
+	fechaNacimiento: "",
+	sexo: "",
+	direccion: "",
+	telefono: "",
+	email: "",
+	seguro: "",
+	contactoNombre: "",
+	contactoTelefono: "",
+	triaje: "",
+	peso: "",
+	talla: "",
+	descripcion: "",
+	caracteristicas: "",
+	alergias: "",
+	antecedentes: "",
 });
+
 
 export default function RegistrarPaciente() {
 const { usuario } = useAuth();
@@ -58,10 +71,10 @@ setNuevo(createNuevoPaciente());
 };
 
 const buildPaciente = () => ({
-...nuevo,
-usuarioId: usuario?.id || usuario?.usuario || "",
-nombreperador: usuario?.usuario || "",
-fechaRegistro: new Date().toISOString().slice(0, 10),
+	...nuevo,
+	usuarioId: usuario?.id || usuario?.usuario || "",
+	nombreOperador: usuario?.usuario || "",
+	fechaRegistro: new Date().toISOString().slice(0, 10),
 });
 
 const saveLocal = (paciente) => {
@@ -142,12 +155,36 @@ Sincronizar ahora
 </div>
 )}
 
+
 <input placeholder="DNI" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
 <input placeholder="Nombre" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
 <input placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
+
+<input type="date" placeholder="Fecha de nacimiento" value={nuevo.fechaNacimiento} onChange={(e) => setNuevo({ ...nuevo, fechaNacimiento: e.target.value })} />
+
+<select value={nuevo.sexo} onChange={(e) => setNuevo({ ...nuevo, sexo: e.target.value })}>
+	<option value="">Sexo</option>
+	<option value="M">Masculino</option>
+	<option value="F">Femenino</option>
+	<option value="O">Otro</option>
+</select>
+
+<input placeholder="Teléfono" type="tel" value={nuevo.telefono} onChange={(e) => setNuevo({ ...nuevo, telefono: e.target.value })} />
+<input placeholder="Email" type="email" value={nuevo.email} onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })} />
+<input placeholder="Dirección" value={nuevo.direccion} onChange={(e) => setNuevo({ ...nuevo, direccion: e.target.value })} />
+<input placeholder="Seguro / Obra social" value={nuevo.seguro} onChange={(e) => setNuevo({ ...nuevo, seguro: e.target.value })} />
+
+<input placeholder="Peso (kg)" type="number" value={nuevo.peso} onChange={(e) => setNuevo({ ...nuevo, peso: e.target.value })} />
+<input placeholder="Talla (cm)" type="number" value={nuevo.talla} onChange={(e) => setNuevo({ ...nuevo, talla: e.target.value })} />
+
+<input placeholder="Contacto de emergencia - Nombre" value={nuevo.contactoNombre} onChange={(e) => setNuevo({ ...nuevo, contactoNombre: e.target.value })} />
+<input placeholder="Contacto de emergencia - Teléfono" value={nuevo.contactoTelefono} onChange={(e) => setNuevo({ ...nuevo, contactoTelefono: e.target.value })} />
+
 <input placeholder="Triaje" value={nuevo.triaje} onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })} />
 
+<textarea placeholder="Alergias" value={nuevo.alergias} onChange={(e) => setNuevo({ ...nuevo, alergias: e.target.value })} />
 <textarea placeholder="Descripción" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
+<textarea placeholder="Antecedentes personales" value={nuevo.antecedentes} onChange={(e) => setNuevo({ ...nuevo, antecedentes: e.target.value })} />
 <textarea placeholder="Características" value={nuevo.caracteristicas} onChange={(e) => setNuevo({ ...nuevo, caracteristicas: e.target.value })} />
 
 <button onClick={guardar}>Guardar paciente</button>
