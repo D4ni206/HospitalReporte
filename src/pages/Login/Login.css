@@ -25,7 +25,7 @@ html, body, #root {
 
 /* --- COLUMNA IZQUIERDA --- */
 .split-login-left {
-    width: 50%;
+    width: 40%;
     height: 100%;
     background-color: #0f2439;
     display: flex;
@@ -38,7 +38,7 @@ html, body, #root {
 
 .hospital-logo-container {
     background-color: #ffffff;
-    padding: 0px 19px;
+    padding: 0px 120px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -61,7 +61,7 @@ html, body, #root {
 
 .app-badge {
     color: #0a8d7b;
-    font-size: 15px;
+    font-size: 25px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.5px;
@@ -69,7 +69,7 @@ html, body, #root {
 
 .left-text-footer h1 {
     color: #ffffff;
-    font-size: 50px;
+    font-size: 55px;
     font-weight: 700;
     line-height: 1.35;
     margin: 0;
@@ -77,7 +77,7 @@ html, body, #root {
 
 /* --- COLUMNA DERECHA --- */
 .split-login-right {
-    width: 50%;
+    width: 60%;
     height: 100%;
     background-color: #ffffff;
     display: flex;
@@ -89,18 +89,18 @@ html, body, #root {
 
 .right-content {
     width: 100%;
-    max-width: 850px;
-    padding: 0 200px;
+    max-width: 980px;
+    padding: 0 140px;
     box-sizing: border-box;
 }
 
 /* Tarjeta blanca centrada dentro de la columna derecha */
 .form-card {
     width: 100%;
-    max-width: 420px;
+    max-width: 520px;
     background-color: #ffffff;
     border-radius: 8px;
-    padding: 36px;
+    padding: 42px;
     box-shadow: 0 10px 30px rgba(15, 36, 57, 0.12);
     margin: 0 auto;
 }

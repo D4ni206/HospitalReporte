@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import logo from "../../assets/logo.png";
 import "./Login.css";
 
 export default function Login() {
@@ -10,10 +11,11 @@ export default function Login() {
 	const navigate = useNavigate();
 	const userRef = useRef(null);
 
-	async function ingresar() {
+	async function ingresar(e) {
+		e.preventDefault(); // Evita que la página se recargue por defecto
 		const ok = await login(usuario, password);
 		if (ok) navigate("/dashboard");
-		else alert("Usuario incorrecto");
+		else alert("Usuario o contraseña incorrectos");
 	}
 
 	useEffect(() => {
@@ -30,12 +32,12 @@ export default function Login() {
 		<div className="split-login-screen">
 			<div className="split-login-left">
 				<div className="hospital-logo-container">
-					<img src="../assets/logo.png" alt="logo" className="hospital-logo-web" />
+					<img src={logo} alt="Logo Hospital" className="hospital-logo-web" />
 				</div>
 
 				<div className="left-text-footer">
 					<span className="app-badge">HOSPITAL SAN JUAN DE DIOS</span>
-					<h1>SISTEMA DE INFORMES EMERGENCIA,SISMO </h1>
+					<h1>SISTEMA DE INFORMES EMERGENCIA, SISMO</h1>
 				</div>
 
 				<div style={{ height: 24 }} />
@@ -45,15 +47,15 @@ export default function Login() {
 				<div className="right-content">
 					<div className="form-card">
 						<div className="logo-center">
-							<img src="/logo.png" alt="logo" className="hospital-logo-web" />
+							<img src={logo} alt="Logo Hospital" className="hospital-logo-web" />
 						</div>
 
-						<div className="hospital-form-split">
+						<form className="hospital-form-split" onSubmit={ingresar}>
 							<div className="form-input-wrapper">
 								<label>Usuario</label>
 								<input
 									placeholder="usuario@ejemplo.com"
-									defaultValue={usuario}
+									value={usuario} // Usar 'value' en lugar de 'defaultValue' para controlarlo con useState
 									onChange={(e) => setUsuario(e.target.value)}
 									autoComplete="off"
 									ref={userRef}
@@ -70,18 +72,12 @@ export default function Login() {
 								/>
 							</div>
 
-							<div style={{ marginBottom: 12 }}>
-								<label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-									<input type="checkbox" /> <span style={{ fontSize: 14 }}>Acepto la política de privacidad</span>
-								</label>
+							<div className="form-input-wrapper" style={{ marginTop: "16px" }}>
+								<button type="submit" className="btn-submit-split">
+									Ingresar
+								</button>
 							</div>
-
-							<button className="btn-submit-split" onClick={ingresar}>
-								Ingresar
-							</button>
-
-							<div className="footer-text-split">Step 1/3</div>
-						</div>
+						</form>
 					</div>
 				</div>
 			</div>
