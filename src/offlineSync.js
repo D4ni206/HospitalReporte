@@ -25,22 +25,33 @@ export function clearPendingPacientes() {
   localStorage.removeItem(PENDING_KEY);
 }
 
+const PING_URL = "https://clients3.google.com/generate_204";
+const CONNECTION_TIMEOUT = 3000;
+
 // Detectar conexión a internet de forma más confiable
 export async function isOnline() {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return false;
+  }
+
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    
-    const response = await fetch("http://www.google.com/favicon.ico", { 
-      method: "HEAD", 
+    const timeout = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+
+    await fetch(PING_URL, {
+      method: "GET",
       mode: "no-cors",
-      signal: controller.signal 
+      cache: "no-cache",
+      signal: controller.signal,
     });
+
     clearTimeout(timeout);
     return true;
-  } catch {
-    // Si falla, confía en navigator.onLine
-    return navigator.onLine;
+  } catch (error) {
+    if (typeof navigator !== "undefined") {
+      return navigator.onLine;
+    }
+    return false;
   }
 }
 

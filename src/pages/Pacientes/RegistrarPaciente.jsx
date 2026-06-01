@@ -5,6 +5,14 @@ import { useAuth } from "../../context/AuthContext";
 import { savePendingPaciente, syncPendingPacientes, getPendingPacientes, isOnline } from "../../offlineSync";
 import "./registrar.css";
 
+const PRIORIDAD_OPTIONS = [
+	{ value: "", label: "Seleccionar prioridad..." },
+	{ value: "Heridas leves", label: "Heridas leves" },
+	{ value: "Observación", label: "Observación" },
+	{ value: "Urgencias", label: "Urgencias" },
+	{ value: "Disponible", label: "Disponible" },
+];
+
 const createNuevoPaciente = () => ({
 	dni: "",
 	nombre: "",
@@ -16,11 +24,14 @@ const createNuevoPaciente = () => ({
 	triaje: "",
 	descripcion: "",
 	caracteristicas: "",
-	alergias: "",
 });
 
 export default function RegistrarPaciente() {
 	const { usuario } = useAuth();
+	const assignedPriority = usuario?.rol !== "admin" ? (usuario?.prioridad || usuario?.triaje || "") : "";
+	const prioridadOptions = assignedPriority && !PRIORIDAD_OPTIONS.some((option) => option.value === assignedPriority)
+		? [...PRIORIDAD_OPTIONS, { value: assignedPriority, label: assignedPriority }]
+		: PRIORIDAD_OPTIONS;
 	const navigate = useNavigate();
 	const [offlineMode, setOfflineMode] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
 	const [pendingCount, setPendingCount] = useState(() => getPendingPacientes().length);
@@ -30,6 +41,13 @@ export default function RegistrarPaciente() {
 	useEffect(() => {
 		if (!usuario) {
 			navigate("/");
+		}
+
+		if (usuario?.rol !== "admin") {
+			const assignedPriority = usuario?.prioridad || usuario?.triaje || "";
+			if (assignedPriority) {
+				setNuevo((prev) => ({ ...prev, triaje: assignedPriority }));
+			}
 		}
 	}, [usuario, navigate]);
 
@@ -85,6 +103,12 @@ export default function RegistrarPaciente() {
 	async function guardar() {
 		setLoading(true);
 		const paciente = buildPaciente();
+
+		if (!paciente.dni?.trim() || !paciente.nombre?.trim() || !paciente.apellido?.trim() || !paciente.triaje?.trim()) {
+			alert("Los campos DNI, Nombre, Apellido y Prioridad son obligatorios.");
+			setLoading(false);
+			return;
+		}
 
 		const online = await isOnline();
 		if (!online) {
@@ -169,17 +193,17 @@ export default function RegistrarPaciente() {
 					<div className="form-grid">
 						<div className="form-group">
 							<label>DNI</label>
-							<input placeholder="Documento de identidad" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
+							<input required placeholder="Documento de identidad" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
 						</div>
 						<div className="form-group">
 							<label>Nombre</label>
-							<input placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
+							<input required placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
 						</div>
 					</div>
 					<div className="form-grid">
 						<div className="form-group">
 							<label>Apellido</label>
-							<input placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
+							<input required placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
 						</div>
 						<div className="form-group">
 							<label>Fecha de Nacimiento</label>
@@ -212,23 +236,28 @@ export default function RegistrarPaciente() {
 							<input placeholder="Tipo de cobertura" value={nuevo.seguro} onChange={(e) => setNuevo({ ...nuevo, seguro: e.target.value })} />
 						</div>
 					</div>
-					<div className="form-grid full">
-						<div className="form-group">
-							<label>Alergias</label>
-							<textarea placeholder="Describe cualquier alergia conocida" value={nuevo.alergias} onChange={(e) => setNuevo({ ...nuevo, alergias: e.target.value })} />
-						</div>
-					</div>
 				</div>
 
 				{/* Triaje y Observaciones */}
 				<div className="form-section">
-					<div className="form-section-title">🏥 Triaje y Observaciones</div>
-					<div className="form-grid full">
-						<div className="form-group">
-							<label>Triaje</label>
-							<input placeholder="Nivel de prioridad" value={nuevo.triaje} onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })} />
-						</div>
+						<div className="form-section-title">🏥 Prioridad y Observaciones</div>
+						<div className="form-grid full">
+							<div className="form-group">
+								<label>Prioridad</label>
+								<select
+									value={nuevo.triaje}
+									onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })}
+									required
+									disabled={usuario?.rol !== "admin" && !!assignedPriority}
+								>
+									{prioridadOptions.map((option) => (
+										<option key={option.value} value={option.value}>
+											{option.label}
+										</option>
+									))}
+								</select>
 					</div>
+				</div>
 					<div className="form-grid full">
 						<div className="form-group">
 							<label>Descripción</label>

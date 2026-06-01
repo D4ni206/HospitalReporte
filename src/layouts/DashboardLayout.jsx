@@ -1,8 +1,10 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./DashboardLayout.css";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
 
   return (
     <div className="dashboard">
@@ -17,20 +19,14 @@ export default function DashboardLayout() {
           Registrar Paciente
         </button>
 
+        {usuario?.rol === "admin" && (
+          <button onClick={() => navigate("/nuevo-operador")}>
+            Nuevo Operador
+          </button>
+        )}
+
         <button onClick={() => navigate("/pacientes")}>
           Lista Pacientes
-        </button>
-
-        <button onClick={() => navigate("/consulta")}>
-          Consulta / Filtro
-        </button>
-
-        <button onClick={() => navigate("/pdf")}>
-          Reporte PDF
-        </button>
-
-        <button onClick={() => navigate("/excel")}>
-          Reporte Excel
         </button>
 
         <button onClick={() => navigate("/")}>

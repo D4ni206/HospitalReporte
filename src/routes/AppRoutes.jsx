@@ -6,9 +6,6 @@ import Login from "../pages/Login/Login";
 import DashboardLayout
 from "../layouts/DashboardLayout";
 
-import ConsultaPaciente
-from "../pages/Pacientes/ConsultaPaciente";
-
 import Dashboard
 from "../pages/Dashboard/Dashboard";
 
@@ -18,12 +15,8 @@ from "../pages/Pacientes/RegistrarPaciente";
 import ListaPacientes
 from "../pages/Pacientes/ListaPacientes";
 
-import ReportePDF
-from "../pages/Reportes/ReportePDF";
-
-import ReporteExcel
-from "../pages/Reportes/ReporteExcel";
-
+import NuevoOperador
+from "../pages/Usuarios/NuevoOperador";
 
 export default function AppRoutes(){
 
@@ -36,16 +29,6 @@ return(
 path="/"
 element={<Login/>}
 />
-<Route
-
-path="/consulta"
-
-element={
-<ConsultaPaciente/>
-}
-
-/>
-
 <Route
 element={<DashboardLayout/>}
 >
@@ -63,20 +46,13 @@ element={<RegistrarPaciente/>}
 
 
 <Route
+path="/nuevo-operador"
+element={<NuevoOperador/>}
+/>
+
+<Route
 path="/pacientes"
 element={<ListaPacientes/>}
-/>
-
-
-<Route
-path="/pdf"
-element={<ReportePDF/>}
-/>
-
-
-<Route
-path="/excel"
-element={<ReporteExcel/>}
 />
 
 </Route>
