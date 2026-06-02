@@ -10,16 +10,16 @@ export default function PacienteTable({ pacientes }) {
       <table className="pacientes-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>DNI</th>
-            <th>Triaje</th>
-            <th>Descripción</th>
-            <th>Usuario ID</th>
-            <th>Nombre operador</th>
-            <th>Fecha registro</th>
-            <th>Características</th>
+            <th>id</th>
+            <th>nombre</th>
+            <th>apellido</th>
+            <th>dni</th>
+            <th>triaje</th>
+            <th>descripcion</th>
+            <th>usuarioId</th>
+            <th>nombreperador</th>
+            <th>fechaRegistro</th>
+            <th>caracteristicas</th>
           </tr>
         </thead>
         <tbody>

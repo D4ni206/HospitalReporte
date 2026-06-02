@@ -13,22 +13,29 @@ const carpasConfig = [
   {
     id: "B",
     status: "Observación",
-    capacity: 120,
+    capacity: 500,
     borderColor: "goldenrod",
   },
   {
     id: "C",
     status: "Urgencias",
-    capacity: 60,
+    capacity: 500,
     borderColor: "crimson",
   },
   {
     id: "D",
     status: "Disponible",
-    capacity: 170,
+    capacity: 500,
     borderColor: "#2a2a2a",
   },
 ];
+
+const CARPA_STATUS = {
+  A: "Heridas leves",
+  B: "Observación",
+  C: "Urgencias",
+  D: "Disponible",
+};
 
 export default function Dashboard() {
   const { usuario } = useAuth();
@@ -40,15 +47,25 @@ export default function Dashboard() {
   );
   const [loading, setLoading] = useState(true);
 
+  const assignedCarpaId = usuario?.carpa?.replace?.("Carpa ", "") || usuario?.carpa;
+  const visibleCarpas =
+    usuario?.rol !== "admin" && usuario?.carpa && usuario.carpa !== "TODOS"
+      ? carpasConfig.filter((carpa) => carpa.id === assignedCarpaId)
+      : carpasConfig;
+
   // Fetch patient counts from Supabase
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         let query = supabase.from("pacientes").select("triaje", { count: "exact" });
 
-        // If user is not admin, filter by operator
-        if (usuario?.rol !== "admin") {
-          query = query.eq("nombreOperador", usuario?.usuario);
+        const assignedStatus =
+          usuario?.rol !== "admin" && usuario?.carpa && usuario.carpa !== "TODOS"
+            ? CARPA_STATUS[assignedCarpaId]
+            : undefined;
+
+        if (assignedStatus) {
+          query = query.eq("triaje", assignedStatus);
         }
 
         const { data, error, count } = await query;
@@ -86,7 +103,12 @@ export default function Dashboard() {
         )
         .subscribe();
 
+      const interval = setInterval(() => {
+        fetchCounts();
+      }, 10000);
+
       return () => {
+        clearInterval(interval);
         subscription.unsubscribe();
       };
     }
@@ -138,7 +160,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="carpa-grid">
-            {carpasConfig.map((carpa) => (
+            {visibleCarpas.map((carpa) => (
               <div
                 key={carpa.id}
                 className="carpa-card"
@@ -152,7 +174,7 @@ export default function Dashboard() {
                 <div className="carpa-body">
                   <div className="carpa-count-label">conteo</div>
                   <div className="carpa-count-value">
-                    {displayCounts[carpa.id]} / {carpa.capacity}
+                    {displayCounts[carpa.id]}/{carpa.capacity}
                   </div>
                 </div>
 

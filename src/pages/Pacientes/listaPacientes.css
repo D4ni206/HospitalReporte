@@ -41,6 +41,22 @@
   flex-wrap: wrap;
 }
 
+.lista-pacientes .sort-button {
+  min-width: 140px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #163b63;
+  background: white;
+  color: #163b63;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.lista-pacientes .sort-button:hover {
+  background: #eef4ff;
+}
+
 .lista-pacientes .export-buttons button {
   border: none;
   padding: 14px 22px;
