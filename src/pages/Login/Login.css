@@ -36,21 +36,11 @@ html, body, #root {
     flex-shrink: 0;
 }
 
-.hospital-logo-container {
-    background-color: #ffffff;
-    padding: 0px 120px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 40px;
-    align-self: flex-start;
-    max-width: 190px;
-}
-
 .hospital-logo-web {
     width: 230px;
     height: auto;
     display: block;
+    border-radius: 20px;
 }
 
 .left-text-footer {

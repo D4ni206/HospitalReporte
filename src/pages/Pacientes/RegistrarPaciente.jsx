@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/client";
 import { useAuth } from "../../context/AuthContext";
-import { savePendingPaciente, syncPendingPacientes, getPendingPacientes, isOnline } from "../../offlineSync";
 import "./registrar.css";
 
 const PRIORIDAD_OPTIONS = [
@@ -33,8 +32,6 @@ export default function RegistrarPaciente() {
 		? [...PRIORIDAD_OPTIONS, { value: assignedPriority, label: assignedPriority }]
 		: PRIORIDAD_OPTIONS;
 	const navigate = useNavigate();
-	const [offlineMode, setOfflineMode] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
-	const [pendingCount, setPendingCount] = useState(() => getPendingPacientes().length);
 	const [nuevo, setNuevo] = useState(createNuevoPaciente());
 	const [loading, setLoading] = useState(false);
 
@@ -51,37 +48,6 @@ export default function RegistrarPaciente() {
 		}
 	}, [usuario, navigate]);
 
-	useEffect(() => {
-		const checkConnection = async () => {
-			const online = await isOnline();
-			setOfflineMode(!online);
-		};
-
-		const handleOnline = async () => {
-			const online = await isOnline();
-			setOfflineMode(!online);
-			setPendingCount(getPendingPacientes().length);
-			const result = await syncPendingPacientes();
-			if (result.synced && result.count > 0) {
-				alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-				setPendingCount(0);
-			}
-		};
-
-		const handleOffline = () => {
-			setOfflineMode(true);
-		};
-
-		checkConnection();
-		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", handleOffline);
-
-		return () => {
-			window.removeEventListener("online", handleOnline);
-			window.removeEventListener("offline", handleOffline);
-		};
-	}, []);
-
 	const resetForm = () => {
 		setNuevo(createNuevoPaciente());
 	};
@@ -93,13 +59,6 @@ export default function RegistrarPaciente() {
 		fechaRegistro: new Date().toISOString().slice(0, 10),
 	});
 
-	const saveLocal = (paciente) => {
-		savePendingPaciente(paciente);
-		setPendingCount(getPendingPacientes().length);
-		alert("Sin conexión: el paciente se guardó localmente y se sincronizará cuando haya internet.");
-		resetForm();
-	};
-
 	async function guardar() {
 		setLoading(true);
 		const paciente = buildPaciente();
@@ -110,35 +69,20 @@ export default function RegistrarPaciente() {
 			return;
 		}
 
-		const online = await isOnline();
-		if (!online) {
-			saveLocal(paciente);
-			setLoading(false);
-			return;
-		}
-
 		try {
 			const { error } = await supabase.from("pacientes").insert([paciente]);
 			if (error) {
 				console.warn("Error guardando paciente en Supabase", error);
-				saveLocal(paciente);
+				alert("Error guardando paciente. Intenta nuevamente.");
 				setLoading(false);
 				return;
 			}
 
 			alert("Paciente registrado correctamente.");
 			resetForm();
-			setPendingCount(getPendingPacientes().length);
-			if (getPendingPacientes().length > 0) {
-				const result = await syncPendingPacientes();
-				if (result.synced && result.count > 0) {
-					alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-					setPendingCount(0);
-				}
-			}
 		} catch (error) {
 			console.warn("Error de red o servidor al guardar paciente", error);
-			saveLocal(paciente);
+			alert("Error de red o servidor al guardar paciente.");
 		} finally {
 			setLoading(false);
 		}
@@ -155,35 +99,6 @@ export default function RegistrarPaciente() {
 
 	return (
 		<div className="registrar">
-			{offlineMode && (
-				<div className="offline-banner">
-					<span>
-						⚠️ Sin conexión. Los registros se guardan localmente.
-						{pendingCount > 0 && ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})`}
-					</span>
-				</div>
-			)}
-			{pendingCount > 0 && !offlineMode && (
-				<div className="offline-banner" style={{ background: "#d1f7dc", color: "#166534", borderColor: "#a7f3d0" }}>
-					<span>📤 {pendingCount} registro(s) pendientes por sincronizar.</span>
-					<button
-						type="button"
-						onClick={async () => {
-							const result = await syncPendingPacientes();
-							if (result.synced) {
-								alert(`Se sincronizaron ${result.count} registro(s) pendientes.`);
-								setPendingCount(0);
-							} else {
-								alert(`No se pudo sincronizar: ${result.reason || 'error'}`);
-							}
-						}}
-						style={{ padding: "8px 16px", borderRadius: 6, background: "#0b6a4f", color: "white", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}
-					>
-						Sincronizar
-					</button>
-				</div>
-			)}
-
 			<h1>➕ Registrar Paciente</h1>
 
 			<div className="registrar-container">
