@@ -16,7 +16,7 @@ const createNuevoPaciente = () => ({
 	dni: "",
 	nombre: "",
 	apellido: "",
-	fechaNacimiento: "",
+	fechaRegistro: "",
 	sexo: "",
 	direccion: "",
 	seguro: "",
@@ -57,7 +57,7 @@ export default function RegistrarPaciente() {
 	const buildPaciente = () => ({
 		...nuevo,
 		usuarioId: usuario?.id || usuario?.usuario || "",
-		nombreOperador: usuario?.usuario || "",
+		nombreperador: usuario?.usuario || "",
 		fechaRegistro: new Date().toISOString().slice(0, 10),
 	});
 
@@ -75,7 +75,7 @@ export default function RegistrarPaciente() {
 			const { error } = await supabase.from("pacientes").insert([paciente]);
 			if (error) {
 				console.warn("Error guardando paciente en Supabase", error);
-				alert("Ocurrió un error al guardar el paciente.");
+				alert("No se pudo guardar el paciente. Revisa la configuración de Supabase.");
 				setLoading(false);
 				return;
 			}
@@ -84,7 +84,7 @@ export default function RegistrarPaciente() {
 			resetForm();
 		} catch (error) {
 			console.warn("Error de red o servidor al guardar paciente", error);
-			alert("Ocurrió un error al guardar el paciente.");
+			alert("Error de red o servidor al guardar paciente.");
 		} finally {
 			setLoading(false);
 		}
@@ -160,8 +160,6 @@ export default function RegistrarPaciente() {
 
 	return (
 		<div className="registrar">
-		
-
 			<h1>➕ Registrar Paciente</h1>
 
 			<div className="registrar-container">
@@ -198,8 +196,8 @@ export default function RegistrarPaciente() {
 							<input required placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
 						</div>
 						<div className="form-group">
-							<label>Fecha de Nacimiento</label>
-							<input type="date" value={nuevo.fechaNacimiento} onChange={(e) => setNuevo({ ...nuevo, fechaNacimiento: e.target.value })} />
+							<label>Fecha de Registro</label>
+							<input type="date" value={nuevo.fechaRegistro} onChange={(e) => setNuevo({ ...nuevo, fechaRegistro: e.target.value })} />
 						</div>
 					</div>
 					<div className="form-grid">
@@ -265,7 +263,7 @@ export default function RegistrarPaciente() {
 				</div>
 
 				<button onClick={guardar} disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
-					{loading ? "⏳ Guardando..." : "💾 Guardar Paciente"}
+					{loading ? "⏳ Guardando..." : " Guardar Paciente"}
 				</button>
 			</div>
 		</div>

@@ -1,14 +1,13 @@
-import { createClient }
-from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-"https://jvhylhyyvcyvaxzegcob.supabase.co";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://jvhylhyyvcyvaxzegcob.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_csZrTA69I8KjZP32BDOsCw_nEtKWVTw";
 
-const supabaseAnonKey =
-"sb_publishable_csZrTA69I8KjZP32BDOsCw_nEtKWVTw";
-
-export const supabase =
-createClient(
-supabaseUrl,
-supabaseAnonKey
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+    },
+  },
+});

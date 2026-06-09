@@ -9,6 +9,8 @@ export default function NuevoOperador() {
   const navigate = useNavigate();
   const [nuevoUsuario, setNuevoUsuario] = useState("");
   const [password, setPassword] = useState("");
+  const [rol, setRol] = useState("operador");
+  const [carpa, setCarpa] = useState("TODOS");
   const [loading, setLoading] = useState(false);
 
   if (!usuario || usuario?.rol !== "admin") {
@@ -35,14 +37,16 @@ export default function NuevoOperador() {
       {
         usuario: nuevoUsuario.trim(),
         password: password.trim(),
-        rol: "operador",
+        rol,
+        carpa,
       },
     ]);
 
     setLoading(false);
 
     if (error) {
-      alert(`No se pudo crear el operador: ${error.message || error}`);
+      console.warn("Error creando nuevo operador", error);
+      alert("No se pudo crear el operador. Revisa la configuración de Supabase.");
       return;
     }
 
@@ -87,7 +91,23 @@ export default function NuevoOperador() {
           <div className="form-grid full">
             <div className="form-group">
               <label>Rol</label>
-              <input value="operador" disabled />
+              <select value={rol} onChange={(e) => setRol(e.target.value)}>
+                <option value="operador">operador</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid full">
+            <div className="form-group">
+              <label>Carpa asignada</label>
+              <select value={carpa} onChange={(e) => setCarpa(e.target.value)}>
+                <option value="TODOS">TODOS</option>
+                <option value="Carpa A">Carpa A</option>
+                <option value="Carpa B">Carpa B</option>
+                <option value="Carpa C">Carpa C</option>
+                <option value="Carpa D">Carpa D</option>
+              </select>
             </div>
           </div>
 

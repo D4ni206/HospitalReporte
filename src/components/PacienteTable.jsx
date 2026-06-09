@@ -20,7 +20,6 @@ export default function PacienteTable({ pacientes, onEdit, onDelete, onInforme }
             <th>Nombre operador</th>
             <th>Fecha registro</th>
             <th>Características</th>
-            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>

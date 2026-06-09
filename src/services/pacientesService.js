@@ -1,11 +1,11 @@
 import { supabase } from "../supabase/client";
 
-export async function fetchPacientes({ search = "", usuario = null } = {}) {
+export async function fetchPacientes({ search = "", usuario = null, carpaStatus } = {}) {
   let query = supabase.from("pacientes").select("*").order("id", { ascending: false }).limit(500);
 
-  // Filter by operator if user is not admin
-  if (usuario && usuario.rol !== "admin") {
-    query = query.eq("nombreOperador", usuario.usuario);
+  // Filter by assigned carpa for non-admin users
+  if (carpaStatus) {
+    query = query.eq("triaje", carpaStatus);
   }
 
   if (search.trim()) {

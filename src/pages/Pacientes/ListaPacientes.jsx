@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { usePacientes } from "../../hooks/usePacientes";
 import { useNavigate } from "react-router-dom";
 import PacienteTable from "../../components/PacienteTable";
@@ -7,30 +8,7 @@ import { deletePaciente } from "../../services/pacientesService";
 import "./listaPacientes.css";
 
 export default function ListaPacientes() {
-  const { pacientes, loading, error, busqueda, setBusqueda, refreshPacientes } = usePacientes();
-  const navigate = useNavigate();
-
-  async function handleDeletePaciente(id) {
-    const confirmDelete = window.confirm("¿Estás seguro de eliminar este paciente?");
-    if (!confirmDelete) return;
-
-    try {
-      await deletePaciente(id);
-      alert("Paciente eliminado correctamente.");
-      refreshPacientes();
-    } catch (err) {
-      console.error("Error eliminando paciente:", err);
-      alert("No se pudo eliminar el paciente. Intenta de nuevo.");
-    }
-  }
-
-  const handleEditPaciente = (id) => {
-    navigate(`/pacientes/${id}/editar`);
-  };
-
-  const handleCreateInforme = (id) => {
-    navigate(`/pacientes/${id}/informe`);
-  };
+  const { pacientes, loading, error, busqueda, setBusqueda } = usePacientes();
 
   return (
     <div className="lista-pacientes">
@@ -44,9 +22,16 @@ export default function ListaPacientes() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
+          <button
+            type="button"
+            className="sort-button"
+            onClick={() => setSortDesc((current) => !current)}
+          >
+            {sortDesc ? "Mayor → Menor" : "Menor → Mayor"}
+          </button>
           <div className="export-buttons">
-            <ReportePDF pacientes={pacientes} />
-            <ReporteExcel pacientes={pacientes} />
+            <ReportePDF pacientes={sortedPacientes} />
+            <ReporteExcel pacientes={sortedPacientes} />
           </div>
         </div>
       </div>
@@ -56,12 +41,7 @@ export default function ListaPacientes() {
       {loading ? (
         <div className="error-box">Cargando pacientes...</div>
       ) : (
-        <PacienteTable
-          pacientes={pacientes}
-          onEdit={handleEditPaciente}
-          onDelete={handleDeletePaciente}
-          onInforme={handleCreateInforme}
-        />
+        <PacienteTable pacientes={pacientes} />
       )}
     </div>
   );
