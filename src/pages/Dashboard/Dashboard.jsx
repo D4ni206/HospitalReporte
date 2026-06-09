@@ -44,10 +44,10 @@ const PRIORIDAD_STATUS = {
 export default function Dashboard() {
   const { usuario } = useAuth();
   const [displayCounts, setDisplayCounts] = useState(
-    carpasConfig.reduce((acc, carpa) => ({ ...acc, [carpa.id]: 0 }), {})
+    priorityConfig.reduce((acc, carpa) => ({ ...acc, [carpa.id]: 0 }), {})
   );
   const [actualCounts, setActualCounts] = useState(
-    carpasConfig.reduce((acc, carpa) => ({ ...acc, [carpa.id]: 0 }), {})
+    priorityConfig.reduce((acc, carpa) => ({ ...acc, [carpa.id]: 0 }), {})
   );
   const [loading, setLoading] = useState(true);
 
@@ -127,7 +127,7 @@ export default function Dashboard() {
         const next = { ...prev };
         let updated = false;
 
-        carpasConfig.forEach((carpa) => {
+        priorityConfig.forEach((carpa) => {
           if (prev[carpa.id] < actualCounts[carpa.id]) {
             next[carpa.id] = Math.min(prev[carpa.id] + 1, actualCounts[carpa.id]);
             updated = true;
@@ -146,61 +146,59 @@ export default function Dashboard() {
   }, [actualCounts]);
 
   return (
-    <div className="dashboard">
-      <div className="content">
-        <div className="top">
-          <div className="page-title">
-            <span className="section-label">HospitalApp</span>
-            <h1>Carpas</h1>
-            <p className="page-description">
-              {usuario?.rol === "admin"
-                ? "Conteo total de todas las carpas en tiempo real."
-                : `Conteo de carpas del operador: ${usuario?.usuario}`}
-            </p>
-          </div>
+    <div className="content">
+      <div className="top">
+        <div className="page-title">
+          <span className="section-label">HospitalApp</span>
+          <h1>Carpas</h1>
+          <p className="page-description">
+            {usuario?.rol === "admin"
+              ? "Conteo total de todas las carpas en tiempo real."
+              : `Conteo de carpas del operador: ${usuario?.usuario}`}
+          </p>
         </div>
+      </div>
 
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <p>Cargando conteos...</p>
-          </div>
-        ) : (
-          <div className="carpa-grid">
-            {visibleCarpas.map((priority) => (
-              <div
-                key={priority.id}
-                className="carpa-card"
-                style={{ borderColor: priority.borderColor }}
-              >
-                <div className="carpa-card-header">
-                  <span className="carpa-label">{priority.label}</span>
-                  <span className="carpa-status">{priority.triajeValue}</span>
-                </div>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>Cargando conteos...</p>
+        </div>
+      ) : (
+        <div className="carpa-grid">
+          {visibleCarpas.map((priority) => (
+            <div
+              key={priority.id}
+              className="carpa-card"
+              style={{ borderColor: priority.borderColor }}
+            >
+              <div className="carpa-card-header">
+                <span className="carpa-label">{priority.label}</span>
+                <span className="carpa-status">{priority.triajeValue}</span>
+              </div>
 
-                <div className="carpa-body">
-                  <div className="carpa-count-label">conteo</div>
-                  <div className="carpa-count-value">
-                    {displayCounts[priority.id]}/{priority.capacity}
-                  </div>
-                </div>
-
-                <div className="carpa-progress">
-                  <div
-                    className="carpa-progress-fill"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        (displayCounts[carpa.id] / carpa.capacity) * 100
-                      )}%`,
-                      backgroundColor: carpa.borderColor,
-                    }}
-                  />
+              <div className="carpa-body">
+                <div className="carpa-count-label">conteo</div>
+                <div className="carpa-count-value">
+                  {displayCounts[priority.id]}/{priority.capacity}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              <div className="carpa-progress">
+                <div
+                  className="carpa-progress-fill"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      (displayCounts[priority.id] / priority.capacity) * 100
+                    )}%`,
+                    backgroundColor: priority.borderColor,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
