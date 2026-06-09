@@ -34,6 +34,8 @@ export default function RegistrarPaciente() {
 	const navigate = useNavigate();
 	const [nuevo, setNuevo] = useState(createNuevoPaciente());
 	const [loading, setLoading] = useState(false);
+	const [dniLoading, setDniLoading] = useState(false);
+	const [dniMessage, setDniMessage] = useState("");
 
 	useEffect(() => {
 		if (!usuario) {
@@ -49,6 +51,7 @@ export default function RegistrarPaciente() {
 
 	const resetForm = () => {
 		setNuevo(createNuevoPaciente());
+		setDniMessage("");
 	};
 
 	const buildPaciente = () => ({
@@ -62,8 +65,8 @@ export default function RegistrarPaciente() {
 		setLoading(true);
 		const paciente = buildPaciente();
 
-		if (!paciente.dni?.trim() || !paciente.nombre?.trim() || !paciente.apellido?.trim() || !paciente.triaje?.trim()) {
-			alert("Los campos DNI, Nombre, Apellido y Prioridad son obligatorios.");
+		if (!paciente.nombre?.trim() || !paciente.apellido?.trim() || !paciente.triaje?.trim()) {
+			alert("Los campos Nombre, Apellido y Prioridad son obligatorios. El DNI es opcional si no se conoce.");
 			setLoading(false);
 			return;
 		}
@@ -84,6 +87,65 @@ export default function RegistrarPaciente() {
 			alert("Ocurrió un error al guardar el paciente.");
 		} finally {
 			setLoading(false);
+		}
+	}
+
+	async function buscarPorDni() {
+		const dniValue = nuevo.dni?.trim();
+
+		if (!dniValue) {
+			setDniMessage("Ingresa un DNI de 8 dígitos para hacer la consulta.");
+			return;
+		}
+
+		if (!/^[0-9]{8}$/.test(dniValue)) {
+			setDniMessage("El DNI debe tener 8 dígitos numéricos.");
+			return;
+		}
+
+		setDniLoading(true);
+		setDniMessage("Buscando datos en RENIEC...");
+
+		const apiUrl = `https://api.apis.net.pe/v1/dni?numero=${dniValue}`;
+		const proxyCodetabs = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`;
+		const proxyAllOriginsGet = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+
+		async function fetchDni(url, wrapAllOrigins = false) {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`No se encontró el DNI o la API no responde (${response.status}).`);
+			}
+			const body = await response.text();
+			return wrapAllOrigins ? JSON.parse(body).contents : JSON.parse(body);
+		}
+
+		try {
+			let data;
+			try {
+				data = await fetchDni(proxyCodetabs);
+			} catch (proxyError) {
+				console.warn("Proxy Codetabs falló, probando AllOrigins:", proxyError);
+				data = await fetchDni(proxyAllOriginsGet, true);
+			}
+
+			const nombre = data?.nombres || data?.nombre || "";
+			const apellido = [data?.apellidoPaterno, data?.apellidoMaterno].filter(Boolean).join(" ") || "";
+
+			if (nombre || apellido) {
+				setNuevo((prev) => ({
+					...prev,
+					nombre: nombre || prev.nombre,
+					apellido: apellido || prev.apellido,
+				}));
+				setDniMessage("Datos cargados correctamente.");
+			} else {
+				setDniMessage("No se encontraron datos para ese DNI.");
+			}
+		} catch (error) {
+			console.error("Error buscando DNI:", error);
+			setDniMessage(`No se pudo consultar el DNI. ${error?.message || "Ingresa los datos manualmente."}`);
+		} finally {
+			setDniLoading(false);
 		}
 	}
 
@@ -109,7 +171,21 @@ export default function RegistrarPaciente() {
 					<div className="form-grid">
 						<div className="form-group">
 							<label>DNI</label>
-							<input required placeholder="Documento de identidad" value={nuevo.dni} onChange={(e) => setNuevo({ ...nuevo, dni: e.target.value })} />
+							<div className="dni-input-row">
+								<input
+									placeholder="Documento de identidad"
+									value={nuevo.dni}
+									onChange={(e) => {
+										setNuevo({ ...nuevo, dni: e.target.value });
+										setDniMessage("");
+									}}
+								/>
+								<button type="button" className="dni-button" onClick={buscarPorDni} disabled={dniLoading}>
+									{dniLoading ? "Buscando..." : "Buscar DNI"}
+								</button>
+							</div>
+							<div className="dni-note">Si no conoces el DNI, puedes dejarlo vacío y completar los datos manualmente.</div>
+							{dniMessage && <div className="dni-message">{dniMessage}</div>}
 						</div>
 						<div className="form-group">
 							<label>Nombre</label>
