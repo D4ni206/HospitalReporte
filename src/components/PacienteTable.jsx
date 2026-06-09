@@ -39,7 +39,7 @@ export default function PacienteTable({ pacientes, onEdit, onDelete, onInforme }
                 <td>{paciente.triaje}</td>
                 <td>{paciente.descripcion}</td>
                 <td>{paciente.usuarioId}</td>
-                <td>{paciente.nombreOperador}</td>
+                <td>{paciente.nombreperador}</td>
                 <td>{formatDate(paciente.fechaRegistro)}</td>
                 <td>{paciente.caracteristicas}</td>
                 <td className="action-cell">
