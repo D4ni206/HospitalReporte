@@ -60,10 +60,17 @@ export default function RegistrarPaciente() {
   };
 
   const buildPaciente = () => ({
-    ...nuevo,
+    dni: nuevo.dni || null,
+    nombre: nuevo.nombre || "",
+    apellido: nuevo.apellido || "",
+    fechaRegistro: nuevo.fechaRegistro || new Date().toISOString().slice(0, 10),
+    sexo: nuevo.sexo || null,
+    direccion: nuevo.direccion || "",
+    triaje: nuevo.triaje || "",
+    descripcion: nuevo.descripcion || "",
+    caracteristicas: nuevo.caracteristicas || "",
     usuarioId: usuario?.id || usuario?.usuario || "",
-    nombreperador: usuario?.usuario || "",
-    fechaRegistro: new Date().toISOString().slice(0, 10),
+    nombreOperador: usuario?.usuario || "",
   });
 
   async function guardar() {
@@ -83,21 +90,22 @@ export default function RegistrarPaciente() {
     }
 
     try {
-      const { error } = await supabase.from("pacientes").insert([paciente]);
+      console.log("Enviando paciente a Supabase:", paciente);
+      const { data, error } = await supabase.from("pacientes").insert([paciente]).select();
+      
       if (error) {
-        console.warn("Error guardando paciente en Supabase", error);
-        alert(
-          "No se pudo guardar el paciente. Revisa la configuración de Supabase."
-        );
+        console.error("Error guardando paciente en Supabase:", error);
+        alert(`Error al guardar: ${error.message || "Error desconocido"}`);
         setLoading(false);
         return;
       }
 
+      console.log("Paciente guardado exitosamente:", data);
       alert("Paciente registrado correctamente.");
       resetForm();
     } catch (error) {
-      console.warn("Error de red o servidor al guardar paciente", error);
-      alert("Error de red o servidor al guardar paciente.");
+      console.error("Error de red o servidor al guardar paciente:", error);
+      alert(`Error: ${error.message || "Error al guardar paciente"}`);
     } finally {
       setLoading(false);
     }
