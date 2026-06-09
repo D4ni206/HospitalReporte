@@ -16,28 +16,22 @@ export function usePacientes(initialSearch = "") {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const refreshPacientes = useCallback(async (searchTerm = busqueda) => {
-    setLoading(true);
-    setError(null);
+  const refreshPacientes = useCallback(
+    async (searchTerm = busqueda) => {
+      setLoading(true);
+      setError(null);
 
       try {
-        const data = await fetchPacientes({ search: busqueda, usuario });
-        if (!active) return;
+        const data = await fetchPacientes({ search: searchTerm, usuario });
         setPacientes(data);
       } catch (err) {
-        if (!active) return;
         setError(err?.message || "Error cargando pacientes");
       } finally {
-        if (!active) return;
         setLoading(false);
       }
-    }, 250);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [busqueda, refreshPacientes]);
+    },
+    [busqueda, usuario]
+  );
 
   return { pacientes, loading, error, busqueda, setBusqueda, refreshPacientes };
 }
