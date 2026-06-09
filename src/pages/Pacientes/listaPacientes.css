@@ -89,6 +89,44 @@
   color: #6b7280;
 }
 
+.action-cell {
+  min-width: 220px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-buttons button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.button-edit {
+  background: #0f75bc;
+  color: white;
+}
+
+.button-delete {
+  background: #dc2626;
+  color: white;
+}
+
+.button-report {
+  background: #0f766e;
+  color: white;
+}
+
+.action-buttons button:hover {
+  opacity: 0.95;
+}
+
 .error-box {
   margin-bottom: 16px;
   padding: 16px;

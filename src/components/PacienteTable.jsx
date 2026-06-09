@@ -4,7 +4,7 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
 }
 
-export default function PacienteTable({ pacientes }) {
+export default function PacienteTable({ pacientes, onEdit, onDelete, onInforme }) {
   return (
     <div className="tabla-pacientes">
       <table className="pacientes-table">
@@ -20,12 +20,13 @@ export default function PacienteTable({ pacientes }) {
             <th>Nombre operador</th>
             <th>Fecha registro</th>
             <th>Características</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {pacientes.length === 0 ? (
             <tr>
-              <td colSpan="10" className="empty-row">
+              <td colSpan="11" className="empty-row">
                 No hay pacientes registrados.
               </td>
             </tr>
@@ -42,6 +43,19 @@ export default function PacienteTable({ pacientes }) {
                 <td>{paciente.nombreperador}</td>
                 <td>{formatDate(paciente.fechaRegistro)}</td>
                 <td>{paciente.caracteristicas}</td>
+                <td className="action-cell">
+                  <div className="action-buttons">
+                    <button type="button" className="button-edit" onClick={() => onEdit?.(paciente.id)}>
+                      Editar
+                    </button>
+                    <button type="button" className="button-delete" onClick={() => onDelete?.(paciente.id)}>
+                      Eliminar
+                    </button>
+                    <button type="button" className="button-report" onClick={() => onInforme?.(paciente.id)}>
+                      Informe
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))
           )}
