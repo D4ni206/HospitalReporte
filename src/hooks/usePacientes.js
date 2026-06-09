@@ -30,8 +30,21 @@ export function usePacientes(initialSearch = "") {
         setLoading(false);
       }
     },
-    [busqueda, usuario]
+    [usuario]
   );
+
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      if (!active) return;
+      refreshPacientes(busqueda);
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [busqueda, refreshPacientes]);
 
   return { pacientes, loading, error, busqueda, setBusqueda, refreshPacientes };
 }

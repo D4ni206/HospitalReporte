@@ -1,14 +1,18 @@
 import { useMemo, useState } from "react";
 import { usePacientes } from "../../hooks/usePacientes";
-import { useNavigate } from "react-router-dom";
 import PacienteTable from "../../components/PacienteTable";
 import ReportePDF from "../Reportes/ReportePDF";
 import ReporteExcel from "../Reportes/ReporteExcel";
-import { deletePaciente } from "../../services/pacientesService";
 import "./listaPacientes.css";
 
 export default function ListaPacientes() {
   const { pacientes, loading, error, busqueda, setBusqueda } = usePacientes();
+  const [sortDesc, setSortDesc] = useState(true);
+
+  const sortedPacientes = useMemo(
+    () => [...pacientes].sort((a, b) => (sortDesc ? b.id - a.id : a.id - b.id)),
+    [pacientes, sortDesc]
+  );
 
   return (
     <div className="lista-pacientes">
@@ -41,7 +45,7 @@ export default function ListaPacientes() {
       {loading ? (
         <div className="error-box">Cargando pacientes...</div>
       ) : (
-        <PacienteTable pacientes={pacientes} />
+        <PacienteTable pacientes={sortedPacientes} />
       )}
     </div>
   );

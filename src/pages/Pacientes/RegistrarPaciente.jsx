@@ -6,10 +6,10 @@ import "./registrar.css";
 
 const PRIORIDAD_OPTIONS = [
 	{ value: "", label: "Seleccionar prioridad..." },
-	{ value: "Heridas leves", label: "Heridas leves" },
-	{ value: "Observación", label: "Observación" },
-	{ value: "Urgencias", label: "Urgencias" },
-	{ value: "Disponible", label: "Disponible" },
+	{ value: "Prioridad 1", label: "Prioridad 1" },
+	{ value: "Prioridad 2", label: "Prioridad 2" },
+	{ value: "Prioridad 3", label: "Prioridad 3" },
+	{ value: "Prioridad 4", label: "Prioridad 4" },
 ];
 
 const createNuevoPaciente = () => ({
@@ -19,7 +19,6 @@ const createNuevoPaciente = () => ({
 	fechaRegistro: "",
 	sexo: "",
 	direccion: "",
-	seguro: "",
 	triaje: "",
 	descripcion: "",
 	caracteristicas: "",
@@ -104,29 +103,27 @@ export default function RegistrarPaciente() {
 		}
 
 		setDniLoading(true);
-		setDniMessage("Buscando datos en RENIEC...");
+		setDniMessage("Buscando datos en ApisPeru...");
 
-		const apiUrl = `https://api.apis.net.pe/v1/dni?numero=${dniValue}`;
-		const proxyCodetabs = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`;
-		const proxyAllOriginsGet = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+		const apisperuToken = import.meta.env.VITE_APISPERU_TOKEN || "";		
+		const apiUrl = `https://dniruc.apisperu.com/api/v1/dni/${dniValue}`;
 
-		async function fetchDni(url, wrapAllOrigins = false) {
-			const response = await fetch(url);
+		async function fetchDni(url) {
+			const response = await fetch(url, {
+				headers: apisperuToken ? { Authorization: `Bearer ${apisperuToken}` } : undefined,
+			});
 			if (!response.ok) {
 				throw new Error(`No se encontró el DNI o la API no responde (${response.status}).`);
 			}
-			const body = await response.text();
-			return wrapAllOrigins ? JSON.parse(body).contents : JSON.parse(body);
+			return await response.json();
 		}
 
 		try {
 			let data;
-			try {
-				data = await fetchDni(proxyCodetabs);
-			} catch (proxyError) {
-				console.warn("Proxy Codetabs falló, probando AllOrigins:", proxyError);
-				data = await fetchDni(proxyAllOriginsGet, true);
+			if (!apisperuToken) {
+				throw new Error("Token de ApisPeru no configurado.");
 			}
+			data = await fetchDni(apiUrl);
 
 			const nombre = data?.nombres || data?.nombre || "";
 			const apellido = [data?.apellidoPaterno, data?.apellidoMaterno].filter(Boolean).join(" ") || "";
@@ -217,16 +214,6 @@ export default function RegistrarPaciente() {
 					</div>
 				</div>
 
-				{/* Información Médica y Seguro */}
-				<div className="form-section">
-					<div className="form-section-title">⚕️ Información Médica</div>
-					<div className="form-grid full">
-						<div className="form-group">
-							<label>Seguro / Obra Social</label>
-							<input placeholder="Tipo de cobertura" value={nuevo.seguro} onChange={(e) => setNuevo({ ...nuevo, seguro: e.target.value })} />
-						</div>
-					</div>
-				</div>
 
 				{/* Triaje y Observaciones */}
 				<div className="form-section">

@@ -18,6 +18,7 @@ export default function AppRoutes() {
         <Route path="/registrar" element={<RegistrarPaciente />} />
         <Route path="/nuevo-operador" element={<NuevoOperador />} />
         <Route path="/pacientes" element={<ListaPacientes />} />
+        <Route path="/lista-pacientes" element={<ListaPacientes />} />
         <Route path="/pacientes/:id/editar" element={<EditarPaciente />} />
         <Route path="/pacientes/:id/informe" element={<InformePaciente />} />
       </Route>
