@@ -5,254 +5,259 @@ import { useAuth } from "../../context/AuthContext";
 import "./registrar.css";
 
 const PRIORIDAD_OPTIONS = [
-	{ value: "", label: "Seleccionar prioridad..." },
-	{ value: "Prioridad 1", label: "Prioridad 1" },
-	{ value: "Prioridad 2", label: "Prioridad 2" },
-	{ value: "Prioridad 3", label: "Prioridad 3" },
-	{ value: "Prioridad 4", label: "Prioridad 4" },
+  { value: "", label: "Seleccionar prioridad..." },
+  { value: "Prioridad 1", label: "Prioridad 1" },
+  { value: "Prioridad 2", label: "Prioridad 2" },
+  { value: "Prioridad 3", label: "Prioridad 3" },
+  { value: "Prioridad 4", label: "Prioridad 4" },
 ];
 
 const createNuevoPaciente = () => ({
-	dni: "",
-	nombre: "",
-	apellido: "",
-	fechaRegistro: "",
-	sexo: "",
-	direccion: "",
-	triaje: "",
-	descripcion: "",
-	caracteristicas: "",
+  dni: "",
+  nombre: "",
+  apellido: "",
+  fechaRegistro: "",
+  sexo: "",
+  direccion: "",
+  triaje: "",
+  descripcion: "",
+  caracteristicas: "",
 });
 
 export default function RegistrarPaciente() {
-	const { usuario } = useAuth();
-	const assignedPriority = usuario?.rol !== "admin" ? (usuario?.prioridad || usuario?.triaje || "") : "";
-	const prioridadOptions = assignedPriority && !PRIORIDAD_OPTIONS.some((option) => option.value === assignedPriority)
-		? [...PRIORIDAD_OPTIONS, { value: assignedPriority, label: assignedPriority }]
-		: PRIORIDAD_OPTIONS;
-	const navigate = useNavigate();
-	const [nuevo, setNuevo] = useState(createNuevoPaciente());
-	const [loading, setLoading] = useState(false);
-	const [dniLoading, setDniLoading] = useState(false);
-	const [dniMessage, setDniMessage] = useState("");
+  const { usuario } = useAuth();
+  const assignedPriority =
+    usuario?.rol !== "admin"
+      ? usuario?.prioridad || usuario?.triaje || ""
+      : "";
+  const prioridadOptions =
+    assignedPriority &&
+    !PRIORIDAD_OPTIONS.some((option) => option.value === assignedPriority)
+      ? [
+          ...PRIORIDAD_OPTIONS,
+          { value: assignedPriority, label: assignedPriority },
+        ]
+      : PRIORIDAD_OPTIONS;
 
-	useEffect(() => {
-		if (!usuario) {
-			navigate("/");
-		}
-		if (usuario?.rol !== "admin") {
-			const assignedPriority = usuario?.prioridad || usuario?.triaje || "";
-			if (assignedPriority) {
-				setNuevo((prev) => ({ ...prev, triaje: assignedPriority }));
-			}
-		}
-	}, [usuario, navigate]);
+  const navigate = useNavigate();
+  const [nuevo, setNuevo] = useState(createNuevoPaciente());
+  const [loading, setLoading] = useState(false);
 
-	const resetForm = () => {
-		setNuevo(createNuevoPaciente());
-		setDniMessage("");
-	};
+  useEffect(() => {
+    if (!usuario) {
+      navigate("/");
+    }
+    if (usuario?.rol !== "admin") {
+      const assignedPriority = usuario?.prioridad || usuario?.triaje || "";
+      if (assignedPriority) {
+        setNuevo((prev) => ({ ...prev, triaje: assignedPriority }));
+      }
+    }
+  }, [usuario, navigate]);
 
-	const buildPaciente = () => ({
-		...nuevo,
-		usuarioId: usuario?.id || usuario?.usuario || "",
-		nombreperador: usuario?.usuario || "",
-		fechaRegistro: new Date().toISOString().slice(0, 10),
-	});
+  const resetForm = () => {
+    setNuevo(createNuevoPaciente());
+  };
 
-	async function guardar() {
-		setLoading(true);
-		const paciente = buildPaciente();
+  const buildPaciente = () => ({
+    ...nuevo,
+    usuarioId: usuario?.id || usuario?.usuario || "",
+    nombreperador: usuario?.usuario || "",
+    fechaRegistro: new Date().toISOString().slice(0, 10),
+  });
 
-		if (!paciente.nombre?.trim() || !paciente.apellido?.trim() || !paciente.triaje?.trim()) {
-			alert("Los campos Nombre, Apellido y Prioridad son obligatorios. El DNI es opcional si no se conoce.");
-			setLoading(false);
-			return;
-		}
+  async function guardar() {
+    setLoading(true);
+    const paciente = buildPaciente();
 
-		try {
-			const { error } = await supabase.from("pacientes").insert([paciente]);
-			if (error) {
-				console.warn("Error guardando paciente en Supabase", error);
-				alert("No se pudo guardar el paciente. Revisa la configuración de Supabase.");
-				setLoading(false);
-				return;
-			}
+    if (
+      !paciente.nombre?.trim() ||
+      !paciente.apellido?.trim() ||
+      !paciente.triaje?.trim()
+    ) {
+      alert(
+        "Los campos Nombre, Apellido y Prioridad son obligatorios. El DNI es opcional si no se conoce."
+      );
+      setLoading(false);
+      return;
+    }
 
-			alert("Paciente registrado correctamente.");
-			resetForm();
-		} catch (error) {
-			console.warn("Error de red o servidor al guardar paciente", error);
-			alert("Error de red o servidor al guardar paciente.");
-		} finally {
-			setLoading(false);
-		}
-	}
+    try {
+      const { error } = await supabase.from("pacientes").insert([paciente]);
+      if (error) {
+        console.warn("Error guardando paciente en Supabase", error);
+        alert(
+          "No se pudo guardar el paciente. Revisa la configuración de Supabase."
+        );
+        setLoading(false);
+        return;
+      }
 
-	async function buscarPorDni() {
-		const dniValue = nuevo.dni?.trim();
+      alert("Paciente registrado correctamente.");
+      resetForm();
+    } catch (error) {
+      console.warn("Error de red o servidor al guardar paciente", error);
+      alert("Error de red o servidor al guardar paciente.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-		if (!dniValue) {
-			setDniMessage("Ingresa un DNI de 8 dígitos para hacer la consulta.");
-			return;
-		}
+  if (!usuario) {
+    return (
+      <div className="registrar">
+        <h1>➕ Registrar paciente</h1>
+        <p>Cargando usuario...</p>
+      </div>
+    );
+  }
 
-		if (!/^[0-9]{8}$/.test(dniValue)) {
-			setDniMessage("El DNI debe tener 8 dígitos numéricos.");
-			return;
-		}
+  return (
+    <div className="registrar">
+      <h1>➕ Registrar Paciente</h1>
 
-		setDniLoading(true);
-		setDniMessage("Buscando datos en ApisPeru...");
+      <div className="registrar-container">
+        {/* Datos Personales */}
+        <div className="form-section">
+          <div className="form-section-title">📋 Datos Personales</div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>DNI</label>
+              <input
+                placeholder="Documento de identidad"
+                value={nuevo.dni}
+                onChange={(e) => {
+                  setNuevo({ ...nuevo, dni: e.target.value });
+                }}
+              />
+              <div className="dni-note">
+                Si no conoces el DNI, puedes dejarlo vacío y completar los
+                datos manualmente.
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Nombre</label>
+              <input
+                required
+                placeholder="Nombre completo"
+                value={nuevo.nombre}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, nombre: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Apellido</label>
+              <input
+                required
+                placeholder="Apellido"
+                value={nuevo.apellido}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, apellido: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label>Fecha de Registro</label>
+              <input
+                type="date"
+                value={nuevo.fechaRegistro}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, fechaRegistro: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Sexo</label>
+              <select
+                value={nuevo.sexo}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, sexo: e.target.value })
+                }
+              >
+                <option value="">Seleccionar...</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Dirección</label>
+              <input
+                placeholder="Dirección de residencia"
+                value={nuevo.direccion}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, direccion: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        </div>
 
-		const apisperuToken = import.meta.env.VITE_APISPERU_TOKEN || "";		
-		const apiUrl = `https://dniruc.apisperu.com/api/v1/dni/${dniValue}`;
+        {/* Triaje y Observaciones */}
+        <div className="form-section">
+          <div className="form-section-title">
+            🏥 Prioridad y Observaciones
+          </div>
+          <div className="form-grid full">
+            <div className="form-group">
+              <label>Prioridad</label>
+              <select
+                value={nuevo.triaje}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, triaje: e.target.value })
+                }
+                required
+                disabled={
+                  usuario?.rol !== "admin" && !!assignedPriority
+                }
+              >
+                {prioridadOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="form-grid full">
+            <div className="form-group">
+              <label>Descripción</label>
+              <textarea
+                placeholder="Descripción general del caso"
+                value={nuevo.descripcion}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, descripcion: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <div className="form-grid full">
+            <div className="form-group">
+              <label>Características</label>
+              <textarea
+                placeholder="Características adicionales"
+                value={nuevo.caracteristicas}
+                onChange={(e) =>
+                  setNuevo({ ...nuevo, caracteristicas: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        </div>
 
-		async function fetchDni(url) {
-			const response = await fetch(url, {
-				headers: apisperuToken ? { Authorization: `Bearer ${apisperuToken}` } : undefined,
-			});
-			if (!response.ok) {
-				throw new Error(`No se encontró el DNI o la API no responde (${response.status}).`);
-			}
-			return await response.json();
-		}
-
-		try {
-			let data;
-			if (!apisperuToken) {
-				throw new Error("Token de ApisPeru no configurado.");
-			}
-			data = await fetchDni(apiUrl);
-
-			const nombre = data?.nombres || data?.nombre || "";
-			const apellido = [data?.apellidoPaterno, data?.apellidoMaterno].filter(Boolean).join(" ") || "";
-
-			if (nombre || apellido) {
-				setNuevo((prev) => ({
-					...prev,
-					nombre: nombre || prev.nombre,
-					apellido: apellido || prev.apellido,
-				}));
-				setDniMessage("Datos cargados correctamente.");
-			} else {
-				setDniMessage("No se encontraron datos para ese DNI.");
-			}
-		} catch (error) {
-			console.error("Error buscando DNI:", error);
-			setDniMessage(`No se pudo consultar el DNI. ${error?.message || "Ingresa los datos manualmente."}`);
-		} finally {
-			setDniLoading(false);
-		}
-	}
-
-	if (!usuario) {
-		return (
-			<div className="registrar">
-				<h1>➕ Registrar paciente</h1>
-				<p>Cargando usuario...</p>
-			</div>
-		);
-	}
-
-	return (
-		<div className="registrar">
-			<h1>➕ Registrar Paciente</h1>
-
-			<div className="registrar-container">
-				{/* Datos Personales */}
-				<div className="form-section">
-					<div className="form-section-title">📋 Datos Personales</div>
-					<div className="form-grid">
-						<div className="form-group">
-							<label>DNI</label>
-							<div className="dni-input-row">
-								<input
-									placeholder="Documento de identidad"
-									value={nuevo.dni}
-									onChange={(e) => {
-										setNuevo({ ...nuevo, dni: e.target.value });
-										setDniMessage("");
-									}}
-								/>
-								<button type="button" className="dni-button" onClick={buscarPorDni} disabled={dniLoading}>
-									{dniLoading ? "Buscando..." : "Buscar DNI"}
-								</button>
-							</div>
-							<div className="dni-note">Si no conoces el DNI, puedes dejarlo vacío y completar los datos manualmente.</div>
-							{dniMessage && <div className="dni-message">{dniMessage}</div>}
-						</div>
-						<div className="form-group">
-							<label>Nombre</label>
-							<input required placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
-						</div>
-					</div>
-					<div className="form-grid">
-						<div className="form-group">
-							<label>Apellido</label>
-							<input required placeholder="Apellido" value={nuevo.apellido} onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })} />
-						</div>
-						<div className="form-group">
-							<label>Fecha de Registro</label>
-							<input type="date" value={nuevo.fechaRegistro} onChange={(e) => setNuevo({ ...nuevo, fechaRegistro: e.target.value })} />
-						</div>
-					</div>
-					<div className="form-grid">
-						<div className="form-group">
-							<label>Sexo</label>
-							<select value={nuevo.sexo} onChange={(e) => setNuevo({ ...nuevo, sexo: e.target.value })}>
-								<option value="">Seleccionar...</option>
-								<option value="M">Masculino</option>
-								<option value="F">Femenino</option>
-								<option value="O">Otro</option>
-							</select>
-						</div>
-						<div className="form-group">
-							<label>Dirección</label>
-							<input placeholder="Dirección de residencia" value={nuevo.direccion} onChange={(e) => setNuevo({ ...nuevo, direccion: e.target.value })} />
-						</div>
-					</div>
-				</div>
-
-
-				{/* Triaje y Observaciones */}
-				<div className="form-section">
-						<div className="form-section-title">🏥 Prioridad y Observaciones</div>
-						<div className="form-grid full">
-							<div className="form-group">
-								<label>Prioridad</label>
-								<select
-									value={nuevo.triaje}
-									onChange={(e) => setNuevo({ ...nuevo, triaje: e.target.value })}
-									required
-									disabled={usuario?.rol !== "admin" && !!assignedPriority}
-								>
-									{prioridadOptions.map((option) => (
-										<option key={option.value} value={option.value}>
-											{option.label}
-										</option>
-									))}
-								</select>
-					</div>
-				</div>
-					<div className="form-grid full">
-						<div className="form-group">
-							<label>Descripción</label>
-							<textarea placeholder="Descripción general del caso" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
-						</div>
-					</div>
-					<div className="form-grid full">
-						<div className="form-group">
-							<label>Características</label>
-							<textarea placeholder="Características adicionales" value={nuevo.caracteristicas} onChange={(e) => setNuevo({ ...nuevo, caracteristicas: e.target.value })} />
-						</div>
-					</div>
-				</div>
-
-				<button onClick={guardar} disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
-					{loading ? "⏳ Guardando..." : " Guardar Paciente"}
-				</button>
-			</div>
-		</div>
-	);
+        <button
+          onClick={guardar}
+          disabled={loading}
+          style={{ opacity: loading ? 0.6 : 1 }}
+        >
+          {loading ? "⏳ Guardando..." : "💾 Guardar Paciente"}
+        </button>
+      </div>
+    </div>
+  );
 }
